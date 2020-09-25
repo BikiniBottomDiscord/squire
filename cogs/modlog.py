@@ -2,9 +2,13 @@
 import discord
 import json
 import asyncio
+import logging
 
 from discord.ext import commands
 from collections import defaultdict
+
+
+logger = logging.getLogger('cogs.modlog')
 
 
 class Infractions:

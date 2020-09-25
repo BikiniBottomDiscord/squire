@@ -5,19 +5,13 @@ import traceback
 import random
 import asyncio
 import io
+import logging
+import contextlib
 
 from discord.ext import commands
 
 
-def check(user):
-    return user.id in {
-        204414611578028034,  # rev
-        304695409031512064,  # dove
-        426550338141683713,  # dee
-        224323277370294275,  # kiwi
-        298497141490450432,  # swine
-
-    }
+logger = logging.getLogger('cogs.admin')
 
 
 class Admin(commands.Cog):

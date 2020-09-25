@@ -3,14 +3,9 @@ from discord.ext import commands
 
 import logging
 import sys
-import datetime
-import enum
 
 
-if sys.platform == 'linux':
-    HOME_DIR = f'/home/bots'
-else:
-    HOME_DIR = r'C:\Users\nwund\GitHub\RevBots'
+logger = logging.getLogger('utils.utility')
 
 
 red_tick = '<:redTick:699377558361341952>'
@@ -36,17 +31,20 @@ def list_by_category(guild):
     return channels
 
 
-def setup_logger(name, level=logging.INFO):
+def setup_logger(name, debug, dt):
     logger = logging.getLogger(name)
-    d = datetime.datetime.now()
-    time = f"{d.month}-{d.day}_{d.hour}h{d.minute}m"
+    time = f"{dt.month}-{dt.day}_{dt.hour}h{dt.minute}m"
 
     if sys.platform == 'linux':
-        filename = HOME_DIR + '/logs/{}/{}.log'
+        filename = './logs/{}.log'
     else:
-        filename = '../RevBots/logs/{}/{}.log'
+        filename = './logs/{}.log'
+    if debug:
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
 
-    file_handler = logging.FileHandler(filename.format(name, time))
+    file_handler = logging.FileHandler(filename.format(time))
     # file_handler.setLevel(level)
 
     stream_handler = logging.StreamHandler(sys.stdout)
@@ -59,43 +57,6 @@ def setup_logger(name, level=logging.INFO):
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
     logger.setLevel(level)
-    return logger
-
-
-def module_logger(name, extension, level=logging.DEBUG, stream=True, file=True):
-    logger = logging.getLogger(extension)  # logger name is cog name
-    d = datetime.datetime.now()
-    time = f"{d.month}-{d.day}_{d.hour}h{d.minute}m"
-
-    if sys.platform == 'linux':
-        filename = HOME_DIR + '/logs/{}/{}.log'
-    else:
-        filename = '../RevBots/logs/{}/{}.log'
-    # uses name to log in the same file as bot logger
-    file_handler = logging.FileHandler(filename.format(name, time))
-    # file_handler.setLevel(level)
-
-    stream_handler = logging.StreamHandler(sys.stdout)
-    # stream_handler.setLevel(level)
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-    stream_handler.setFormatter(formatter)
-
-    if file:
-        logger.addHandler(file_handler)
-    if stream:
-        logger.addHandler(stream_handler)
-    logger.setLevel(level)
-    return logger
-
-
-def stream_logger(name):
-    logger = logging.getLogger(name)
-    stream_handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
     return logger
 
 

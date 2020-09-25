@@ -1,6 +1,7 @@
 
 import sys
 import yaml
+import datetime
 import logging
 from argparse import ArgumentParser
 
@@ -9,7 +10,12 @@ from discord.ext import commands
 from bot import Squire
 from utils import checks
 from authentication import TOKEN
-from utils.utility import setup_logger, module_logger, HOME_DIR
+from utils.utility import setup_logger
+
+
+logger = logging.getLogger('launcher')
+
+started_at = datetime.datetime.now()
 
 
 def main():
@@ -20,18 +26,17 @@ def main():
     args = parser.parse_args()
     debug = args.debug
 
-    if sys.platform != 'linux' or debug:
-        level = logging.DEBUG
-    else:
-        level = logging.INFO
+    setup_logger('discord', False, started_at)
+    setup_logger('launcher', debug, started_at)
+    setup_logger('bot', debug, started_at)
+    setup_logger('cogs', debug, started_at)
+    setup_logger('utils', debug, started_at)
 
-    bot_logger = setup_logger(name)
-    logger = module_logger(name, "launcher", level)
-    module_logger(name, 'discord', logging.INFO)
-
-    logger.info(f"Starting {name}.")
-
+    logger.info(f"Starting bot.")
     bot = Squire()
+
+    logger.info("Loading cogs.")
+    bot.load_cogs()
 
     logger.info("Calling run method.")
     try:
@@ -44,6 +49,7 @@ def main():
             exit_code = 0
         logger.info(f"Bot closed with exit code {exit_code}.")
         exit(exit_code)
+
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,13 @@
 import discord
+import logging
+
 from discord.ext import commands
 
 # todo
 #   GlobalChannel, GlobalGuild
 #
+
+logger = logging.getLogger('utils.converters')
 
 
 class FetchedUser(commands.Converter):

@@ -1,5 +1,8 @@
+import logging
 
 from discord.ext import commands
+
+logger = logging.getLogger('utils.checks')
 
 
 def is_admin(user):

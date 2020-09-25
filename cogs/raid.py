@@ -4,10 +4,13 @@ import datetime
 import re
 import typing
 import asyncio
+import logging
 
 from discord.ext import commands
 from discord.ext import tasks
 
+
+logger = logging.getLogger('cogs.raid')
 
 BIKINI_BOTTOM = 384811165949231104
 TEXT_CHANNELS_CATEGORY = 384811165949231105
@@ -35,7 +38,7 @@ class TimeDelta(commands.Converter):
     async def convert(self, ctx, argument):
         if argument.lower() == '--':
             return None
-        match = re.match(TIME_PATTERN, "5m")
+        match = re.match(TIME_PATTERN, argument)
         if match:
             count = match.group(1)
             unit = match.group(2)
