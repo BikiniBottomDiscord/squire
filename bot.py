@@ -6,26 +6,21 @@ import logging
 from discord.ext import commands
 
 from launcher import started_at
+from utils import settings
 
 
 logger = logging.getLogger('bot')
 
 
 def check(user):
-    return user.id in {
-        204414611578028034,  # rev
-        304695409031512064,  # dove
-        426550338141683713,  # dee
-        224323277370294275,  # kiwi
-        298497141490450432,  # swine
-        448250281097035777,  # nojons
-    }
+    return user.id in settings.admins
 
 
 class Squire(commands.Bot):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(command_prefix=settings.prefix, **kwargs)
         self.description = "sQUIRE, Defender of Bikini Bottom"
+        self.version = settings.version
         self.started_at = started_at
         self.add_check(lambda ctx: check(ctx.author))
         self.help_command = commands.MinimalHelpCommand()

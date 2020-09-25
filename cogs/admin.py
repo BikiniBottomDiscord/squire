@@ -43,10 +43,10 @@ class Admin(commands.Cog):
     async def test(self, ctx):
         if random.randint(0, 1) == 1:
             await ctx.guild.me.edit(nick="Ol' Reliable")
-            await ctx.send("Whoosh whoosh, on GCP! <:bluejellyfish:479723952265232396> v1.1.0")
+            await ctx.send(f"Whoosh whoosh, on GCP! <:bluejellyfish:479723952265232396> v{self.bot.version}")
         else:
             await ctx.guild.me.edit(nick="Jellyfish")
-            await ctx.send("Buzz Buzz, on GCP! <:jellyfish:479723952890052608> v1.1.0")
+            await ctx.send(f"Buzz Buzz, on GCP! <:jellyfish:479723952890052608> v{self.bot.version}")
         await ctx.guild.me.edit(nick=None)
 
     @commands.command(name='eval', aliases=['e'])
