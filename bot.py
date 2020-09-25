@@ -26,15 +26,13 @@ class Squire(commands.Bot):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.description = "sQUIRE, Defender of Bikini Bottom"
-        self.load_extension('jishaku')
-        self.load_extension('modlog')
         self.started_at = started_at
         self.add_check(lambda ctx: check(ctx.author))
         self.help_command = commands.MinimalHelpCommand()
         self._exit_code = 0
 
     async def on_ready(self):
-        print(f"Logged in as {self.user}.")
+        logger.info(f"Logged in as {self.user}. Bot is ready.")
 
     async def on_message(self, message):
         # ignore bots

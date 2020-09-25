@@ -18,7 +18,7 @@ class Infractions:
         self.by_user_id = {}
 
     def add_infraction(self, moderator_id, user_id, infraction_type, reason, message_id):
-        print(f"adding infraction {(self.next_id, moderator_id, user_id, infraction_type, reason, message_id)}")
+        logger.debug(f"adding infraction {(self.next_id, moderator_id, user_id, infraction_type, reason, message_id)}")
         infraction = {'moderator_id': moderator_id, 'user_id': user_id, 'infraction_id': self.next_id, 'infraction_type': infraction_type, 'reason': reason, 'message_id': message_id}
         self.by_infraction_id[self.next_id] = infraction
         if user_id in self.by_user_id.keys():
@@ -28,36 +28,36 @@ class Infractions:
         self.next_id += 1
 
     def get_infraction(self, infraction_id):
-        print(f"getting infraction {infraction_id}")
+        logger.debug(f"getting infraction {infraction_id}")
         return self.by_infraction_id[infraction_id]
 
     def edit_infraction(self, infraction_id, reason):
-        print(f"editing infraction {infraction_id} {reason}")
+        logger.debug(f"editing infraction {infraction_id} {reason}")
         infraction = self.by_infraction_id[infraction_id]
         # todo: edit in by_user without scanning
         infraction['reason'] = reason
 
     def get_infractions(self, user_id):
-        print(f"getting infractions for {user_id}")
+        logger.debug(f"getting infractions for {user_id}")
         return self.by_user_id[user_id]
 
     def dump(self):
-        print("DUMPING INFRACTION DATA")
-        print(self.by_user_id)
-        print(self.by_infraction_id)
+        logger.debug("DUMPING INFRACTION DATA")
+        logger.debug(self.by_user_id)
+        logger.debug(self.by_infraction_id)
         with open('infractions.json', 'w') as f:
             json.dump([self.by_user_id, self.by_infraction_id], f)
 
     def load(self):
-        print(f"LOADING INFRACTION DATA")
+        logger.debug(f"LOADING INFRACTION DATA")
         with open('infractions.json', 'r') as f:
             self.by_user_id, by_infraction_id = json.load(f)
         self.by_infraction_id = {}
         for key, value in by_infraction_id.items():
             self.by_infraction_id[int(key)] = value
         self.next_id = len(self.by_infraction_id) + 1
-        print(self.by_user_id)
-        print(self.by_infraction_id)
+        logger.debug(self.by_user_id)
+        logger.debug(self.by_infraction_id)
 
 
 class Modlog(commands.Cog):
@@ -111,7 +111,7 @@ class Modlog(commands.Cog):
         if guild.id != self.guild:
             return
 
-        print("ban detected")
+        logger.debug("ban detected")
 
         moderator = None
         reason = None
@@ -120,16 +120,16 @@ class Modlog(commands.Cog):
 
         async for entry in guild.audit_logs(limit=5):
             if entry.action == discord.AuditLogAction.ban and entry.target == user:
-                print("audit log entry found")
+                logger.debug("audit log entry found")
                 moderator = entry.user
                 reason = entry.reason
                 break
 
         if isinstance(user, discord.User):  # forceban
-            print("it's a forceban")
+            logger.debug("it's a forceban")
             await self.log_forceban(moderator, user, reason)
         else:  # regular ban
-            print("it's a regular ban")
+            logger.debug("it's a regular ban")
             await self.log_ban(moderator, user, reason)
 
     @commands.Cog.listener()
@@ -138,7 +138,7 @@ class Modlog(commands.Cog):
         if guild.id != self.guild:
             return
 
-        print("possible kick detected")
+        logger.debug("possible kick detected")
         moderator = None
         reason = None
 
@@ -146,16 +146,16 @@ class Modlog(commands.Cog):
 
         async for entry in guild.audit_logs(limit=5):
             if entry.action == discord.AuditLogAction.kick and entry.target == member:
-                print("audit log entry found, it's a kick. logging")
+                logger.debug("audit log entry found, it's a kick. logging")
                 moderator = entry.user
                 reason = entry.reason
                 break
             elif entry.action == discord.AuditLogAction.ban and entry.target == member:
-                print("audit log entry found, it's a ban. ignoring")
+                logger.debug("audit log entry found, it's a ban. ignoring")
                 return
 
         if not moderator:
-            print("no audit log entry found. member left the server.")
+            logger.debug("no audit log entry found. member left the server.")
         else:
             await self.log_kick(moderator, member, reason)
 
@@ -174,26 +174,26 @@ class Modlog(commands.Cog):
         await asyncio.sleep(2)
 
         if bad_noodle in before.roles and bad_noodle not in after.roles:  # unmute
-            print("detected unmute")
+            logger.debug("detected unmute")
             async for entry in guild.audit_logs(limit=5):
                 if entry.action == discord.AuditLogAction.member_role_update and bad_noodle in entry.before.roles and bad_noodle not in entry.after.roles:
                     if entry.id == self.last_audit_id:
                         return
                     self.last_audit_id = entry.id
-                    print("unmute audit log entry found")
+                    logger.debug("unmute audit log entry found")
                     moderator = entry.user
                     reason = entry.reason
                     break
             await self.log_unmute(moderator, member, reason)
 
         elif bad_noodle in after.roles and bad_noodle not in before.roles:  # mute
-            print("detected mute")
+            logger.debug("detected mute")
             async for entry in guild.audit_logs(limit=5):
                 if entry.action == discord.AuditLogAction.member_role_update and bad_noodle in entry.after.roles and bad_noodle not in entry.before.roles:
                     if entry.id == self.last_audit_id:
                         return
                     self.last_audit_id = entry.id
-                    print("mute audit log entry found")
+                    logger.debug("mute audit log entry found")
                     moderator = entry.user
                     reason = entry.reason
                     break
@@ -204,7 +204,7 @@ class Modlog(commands.Cog):
         if guild.id != self.guild:
             return
 
-        print("unban detected")
+        logger.debug("unban detected")
         moderator = None
         reason = None
 
@@ -212,7 +212,7 @@ class Modlog(commands.Cog):
 
         async for entry in guild.audit_logs(limit=5):
             if entry.action == discord.AuditLogAction.unban and entry.target == user:
-                print("audit log entry found")
+                logger.debug("audit log entry found")
                 moderator = entry.user
                 reason = entry.reason
                 break

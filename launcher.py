@@ -32,13 +32,13 @@ def main():
     setup_logger('cogs', debug, started_at)
     setup_logger('utils', debug, started_at)
 
-    logger.info(f"Starting bot.")
+    logger.info(f"Initializing bot.")
     bot = Squire()
 
     logger.info("Loading cogs.")
     bot.load_cogs()
 
-    logger.info("Calling run method.")
+    logger.info("Starting bot.")
     try:
         bot.run(TOKEN)
     finally:
