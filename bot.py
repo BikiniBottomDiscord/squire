@@ -38,7 +38,7 @@ class Squire(commands.Bot):
 
     def load_cogs(self):
         logger.info('Loading cogs.')
-        cogs = ['jishaku'] + [f"cogs.{file}" for file in os.listdir('./cogs') if file.endswith('.py')]
+        cogs = ['jishaku'] + [f"cogs.{file[:-3]}" for file in os.listdir('./cogs') if file.endswith('.py')]
         for cog in cogs:
             try:
                 self.load_extension(cog)
