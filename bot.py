@@ -45,7 +45,7 @@ class Squire(commands.Bot):
                 self.load_extension(cog)
                 logger.info(f' - {cog}')
             except commands.ExtensionFailed as e:
-                logger.exception(f"Failed to load cog {cog}")
+                logger.exception(f"Failed to load cog {cog} [{e.__class__.__name__}: {e}]")
         logger.info('Cogs loaded.')
 
 
