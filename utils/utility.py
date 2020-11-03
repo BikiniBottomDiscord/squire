@@ -35,10 +35,8 @@ def setup_logger(name, debug, dt):
     logger = logging.getLogger(name)
     time = f"{dt.month}-{dt.day}_{dt.hour}h{dt.minute}m"
 
-    if sys.platform == 'linux':
-        filename = './logs/{}.log'
-    else:
-        filename = './logs/{}.log'
+
+    filename = 'logs/{}.log'
     if debug:
         level = logging.DEBUG
     else:

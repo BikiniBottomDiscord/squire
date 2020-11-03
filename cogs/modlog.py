@@ -45,12 +45,12 @@ class Infractions:
         logger.debug("DUMPING INFRACTION DATA")
         logger.debug(self.by_user_id)
         logger.debug(self.by_infraction_id)
-        with open('infractions.json', 'w') as f:
+        with open('data/infractions.json', 'w') as f:
             json.dump([self.by_user_id, self.by_infraction_id], f)
 
     def load(self):
         logger.debug(f"LOADING INFRACTION DATA")
-        with open('infractions.json', 'r') as f:
+        with open('data/infractions.json', 'r') as f:
             self.by_user_id, by_infraction_id = json.load(f)
         self.by_infraction_id = {}
         for key, value in by_infraction_id.items():

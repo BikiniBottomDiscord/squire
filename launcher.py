@@ -1,11 +1,8 @@
 
 import sys
-import yaml
 import datetime
 import logging
 from argparse import ArgumentParser
-
-from discord.ext import commands
 
 from bot import Squire
 from utils import checks

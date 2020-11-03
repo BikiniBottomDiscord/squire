@@ -1,0 +1,2 @@
+mkdir logs
+mkdir data
