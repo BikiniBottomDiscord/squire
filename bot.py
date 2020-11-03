@@ -17,12 +17,16 @@ def check(user):
 
 class Squire(commands.Bot):
     def __init__(self, started_at, **kwargs):
-        super().__init__(command_prefix=settings.prefix, **kwargs)
-        self.description = "sQUIRE, Defender of Bikini Bottom"
+        super().__init__(
+            command_prefix=settings.prefix,
+            description="sQUIRE, Defender of Bikini Bottom",
+            help_command=commands.MinimalHelpCommand(),
+            intents=discord.Intents.all(),
+            **kwargs
+        )
         self.version = settings.version
         self.started_at = started_at
         self.add_check(lambda ctx: check(ctx.author))
-        self.help_command = commands.MinimalHelpCommand()
         self._exit_code = 0
 
     async def on_ready(self):
