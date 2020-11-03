@@ -5,7 +5,6 @@ import logging
 
 from discord.ext import commands
 
-from launcher import started_at
 from utils import settings
 
 
@@ -17,7 +16,7 @@ def check(user):
 
 
 class Squire(commands.Bot):
-    def __init__(self, **kwargs):
+    def __init__(self, started_at, **kwargs):
         super().__init__(command_prefix=settings.prefix, **kwargs)
         self.description = "sQUIRE, Defender of Bikini Bottom"
         self.version = settings.version

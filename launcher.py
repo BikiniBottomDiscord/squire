@@ -30,7 +30,7 @@ def main():
     setup_logger('utils', debug, started_at)
 
     logger.info(f"Initializing bot.")
-    bot = Squire()
+    bot = Squire(started_at)
 
     logger.info("Loading cogs.")
     bot.load_cogs()
