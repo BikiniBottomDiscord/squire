@@ -32,7 +32,7 @@ ROLES = [
 ]
 BAD_NOODLE = 541810707386335234
 
-CACHE_REMOVE_AGE_THRESHOLD = 10  # minutes
+CACHE_REMOVE_AGE_THRESHOLD = 20  # minutes
 
 
 class TimeDelta(commands.Converter):
