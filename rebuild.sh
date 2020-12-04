@@ -1,3 +1,2 @@
-docker stop squire
-docker rm squire
-/bin/bash ./start.sh
+bash down.sh
+bash up.sh
