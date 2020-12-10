@@ -11,53 +11,53 @@ from collections import defaultdict
 logger = logging.getLogger('cogs.modlog')
 
 
-class Infractions:
-    def __init__(self):
-        self.next_id = 1
-        self.by_infraction_id = {}
-        self.by_user_id = {}
-
-    def add_infraction(self, moderator_id, user_id, infraction_type, reason, message_id):
-        logger.debug(f"adding infraction {(self.next_id, moderator_id, user_id, infraction_type, reason, message_id)}")
-        infraction = {'moderator_id': moderator_id, 'user_id': user_id, 'infraction_id': self.next_id, 'infraction_type': infraction_type, 'reason': reason, 'message_id': message_id}
-        self.by_infraction_id[self.next_id] = infraction
-        if user_id in self.by_user_id.keys():
-            self.by_user_id[user_id][self.next_id] = infraction_type
-        else:
-            self.by_user_id[user_id] = {self.next_id: infraction_type}
-        self.next_id += 1
-
-    def get_infraction(self, infraction_id):
-        logger.debug(f"getting infraction {infraction_id}")
-        return self.by_infraction_id[infraction_id]
-
-    def edit_infraction(self, infraction_id, reason):
-        logger.debug(f"editing infraction {infraction_id} {reason}")
-        infraction = self.by_infraction_id[infraction_id]
-        # todo: edit in by_user without scanning
-        infraction['reason'] = reason
-
-    def get_infractions(self, user_id):
-        logger.debug(f"getting infractions for {user_id}")
-        return self.by_user_id[user_id]
-
-    def dump(self):
-        logger.debug("DUMPING INFRACTION DATA")
-        logger.debug(self.by_user_id)
-        logger.debug(self.by_infraction_id)
-        with open('data/infractions.json', 'w') as f:
-            json.dump([self.by_user_id, self.by_infraction_id], f)
-
-    def load(self):
-        logger.debug(f"LOADING INFRACTION DATA")
-        with open('data/infractions.json', 'r') as f:
-            self.by_user_id, by_infraction_id = json.load(f)
-        self.by_infraction_id = {}
-        for key, value in by_infraction_id.items():
-            self.by_infraction_id[int(key)] = value
-        self.next_id = len(self.by_infraction_id) + 1
-        logger.debug(self.by_user_id)
-        logger.debug(self.by_infraction_id)
+# class Infractions:
+#     def __init__(self):
+#         self.next_id = 1
+#         self.by_infraction_id = {}
+#         self.by_user_id = {}
+#
+#     def add_infraction(self, moderator_id, user_id, infraction_type, reason, message_id):
+#         logger.debug(f"adding infraction {(self.next_id, moderator_id, user_id, infraction_type, reason, message_id)}")
+#         infraction = {'moderator_id': moderator_id, 'user_id': user_id, 'infraction_id': self.next_id, 'infraction_type': infraction_type, 'reason': reason, 'message_id': message_id}
+#         self.by_infraction_id[self.next_id] = infraction
+#         if user_id in self.by_user_id.keys():
+#             self.by_user_id[user_id][self.next_id] = infraction_type
+#         else:
+#             self.by_user_id[user_id] = {self.next_id: infraction_type}
+#         self.next_id += 1
+#
+#     def get_infraction(self, infraction_id):
+#         logger.debug(f"getting infraction {infraction_id}")
+#         return self.by_infraction_id[infraction_id]
+#
+#     def edit_infraction(self, infraction_id, reason):
+#         logger.debug(f"editing infraction {infraction_id} {reason}")
+#         infraction = self.by_infraction_id[infraction_id]
+#         # todo: edit in by_user without scanning
+#         infraction['reason'] = reason
+#
+#     def get_infractions(self, user_id):
+#         logger.debug(f"getting infractions for {user_id}")
+#         return self.by_user_id[user_id]
+#
+#     def dump(self):
+#         logger.debug("DUMPING INFRACTION DATA")
+#         logger.debug(self.by_user_id)
+#         logger.debug(self.by_infraction_id)
+#         with open('data/infractions.json', 'w') as f:
+#             json.dump([self.by_user_id, self.by_infraction_id], f)
+#
+#     def load(self):
+#         logger.debug(f"LOADING INFRACTION DATA")
+#         with open('data/infractions.json', 'r') as f:
+#             self.by_user_id, by_infraction_id = json.load(f)
+#         self.by_infraction_id = {}
+#         for key, value in by_infraction_id.items():
+#             self.by_infraction_id[int(key)] = value
+#         self.next_id = len(self.by_infraction_id) + 1
+#         logger.debug(self.by_user_id)
+#         logger.debug(self.by_infraction_id)
 
 
 class Modlog(commands.Cog):
@@ -96,7 +96,7 @@ class Modlog(commands.Cog):
         self.infractions.add_infraction(moderator.id, user.id, 'unban', reason, message.id)
 
     async def log_mute(self, moderator, member, reason):
-        content = f"<:thenerve:611986040944590852> **MEMBER MUTED (#{self.infractions.next_id})**\n**User:** {member} (`{member.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}"
+        content = f"<:thenerve:783956406990405682> **MEMBER MUTED (#{self.infractions.next_id})**\n**User:** {member} (`{member.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}"
         message = await self.bot.get_channel(self.logging_channel).send(content)
         self.infractions.add_infraction(moderator.id, member.id, 'mute', reason, message.id)
 

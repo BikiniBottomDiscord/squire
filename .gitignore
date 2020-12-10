@@ -128,4 +128,4 @@ dmypy.json
 .idea
 data/
 logs/
-authentication.py
+auth.py

@@ -1,4 +1,3 @@
-
 import sys
 import datetime
 import logging
@@ -6,7 +5,7 @@ from argparse import ArgumentParser
 
 from bot import Squire
 from utils import checks
-from authentication import TOKEN
+from auth import TOKEN
 from utils.utility import setup_logger
 
 
