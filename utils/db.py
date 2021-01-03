@@ -1,5 +1,4 @@
 import asyncpg
-import secrets
 import logging
 from typing import Optional
 
@@ -70,15 +69,22 @@ class Database:
 
     async def set_message_id(self, infraction_id, message_id):
         self.by_infraction_id[infraction_id]['message_id'] = message_id
-        await self.conn.execute('UPDATE infractions SET message_id = $2 WHERE id = $1', infraction_id, message_id)
+        query = 'UPDATE infractions SET message_id = $2 WHERE id = $1'
+        await self.conn.execute(query, infraction_id, message_id)
 
     async def edit_infraction(self, infraction_id, reason):
-        logger.debug(f"editing infraction {infraction_id} {reason}")
-        infraction = self.by_infraction_id[infraction_id]
-        # todo: edit in by_user without scanning
-        infraction['reason'] = reason
+        self.by_infraction_id[infraction_id]['reason'] = reason
+        query = 'UPDATE infractions SET reason = $2 WHERE id = $1'
+        await self.conn.execute(query, infraction_id, reason)
 
     def get_infractions(self, user_id):
-        logger.debug(f"getting infractions for {user_id}")
-        return self.by_user_id[user_id]
+        if not self.conn:
+            await self.connect()
+
+        if user_id in self.by_user_id:
+            return self.by_user_id[user_id]
+        query = 'SELECT * FROM user_history WHERE user_id = $1'
+        infractions = await self.conn.fetchrow(query, user_id)
+        self.by_user_id[user_id] = infractions
+        return infractions
 

@@ -5,7 +5,8 @@ import asyncio
 import logging
 
 from discord.ext import commands
-from collections import defaultdict
+
+from utils.db import Database
 
 
 logger = logging.getLogger('cogs.modlog')
@@ -65,15 +66,11 @@ class Modlog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.infractions = Infractions()
+        self.infractions = Database()
         self.logging_channel = 713467871040241744
         self.guild = 384811165949231104
         self.muted_role = 541810707386335234
-        self.infractions.load()
         self.last_audit_id = 0
-
-    def cog_unload(self):
-        self.infractions.dump()
 
     async def log_kick(self, moderator, member, reason):
         content = f"<:howmanytimes:502338448951083020> **MEMBER KICKED (#{self.infractions.next_id})**\n**User:** {member} (`{member.id}`)\n**Moderator:** {moderator}\n**Reason:** {reason}"
