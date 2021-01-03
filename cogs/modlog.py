@@ -1,12 +1,14 @@
-
 import discord
 import json
 import asyncio
 import logging
+import typing
 
 from discord.ext import commands
 
-from utils.db import Database
+from utils import checks
+from utils import db
+from utils.converters import FetchedUser
 
 
 logger = logging.getLogger('cogs.modlog')
@@ -24,7 +26,7 @@ class Modlog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.db = Database()
+        self.db = db.Database()
         self.logging_channel = 713467871040241744
         self.guild = 384811165949231104
         self.muted_role = 541810707386335234
@@ -197,29 +199,69 @@ class Modlog(commands.Cog):
 
         await self.log_unban(moderator, user, reason)
 
+    @commands.group(name='case', aliases=['inf'], invoke_without_command=True)
+    @checks.lifeguard()
+    async def infraction(self, ctx, infraction_id: int):
+        """Base command for modlog. Passing an int will return the link to the message associated with a particular infraction."""
+        try:
+            infraction = await self.db.get_infraction(infraction_id)
+            message_id = infraction['message_id']
+            message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
+        except Exception as e:
+            return await ctx.send(f'{e.__class__.__name__}: {e}')
+        await ctx.send(message.jump_url)
 
-    @commands.group(aliases=['infraction', 'inf', 'i'], invoke_without_command=True)
-    async def infractions(self, ctx):
-        pass
+    @infraction.command()
+    @checks.lifeguard()
+    async def view(self, ctx, infraction_id: int):
+        """View the logged message for an infraction."""
+        try:
+            infraction = await self.db.get_infraction(infraction_id)
+            message_id = infraction['message_id']
+            message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
+        except Exception as e:
+            return await ctx.send(f'{e.__class__.__name__}: {e}')
+        await ctx.send(message.content)
 
-    @infractions.command()
-    async def list(self, ctx, user: discord.Member):
-        infractions = self.infractions.get_history(user.id)
-        await ctx.send("```json\n" + json.dumps(infractions, indent=4) + "\n```")
-
-    @infractions.command()
-    async def info(self, ctx, infraction_id: int):
-        infraction = self.infractions.get_infraction(infraction_id)
+    @infraction.command()
+    @checks.lifeguard()
+    async def json(self, ctx, infraction_id: int):
+        """View the database entry for an infraction in JSON format."""
+        try:
+            infraction = await self.db.get_infraction(infraction_id)
+        except Exception as e:
+            return await ctx.send(f'{e.__class__.__name__}: {e}')
         await ctx.send("```json\n" + json.dumps(infraction, indent=4) + "\n```")
 
-    @infractions.command()
+    @infraction.command()
+    @checks.lifeguard()
+    async def list(self, ctx, user: typing.Union[discord.Member, discord.User, FetchedUser]):
+        """View a user's infraction history."""
+        try:
+            infractions = await self.db.get_history(user.id)
+        except Exception as e:
+            return await ctx.send(f'{e.__class__.__name__}: {e}')
+        await ctx.send("```json\n" + json.dumps(infractions, indent=4) + "\n```")
+
+    @infraction.command()
+    @checks.lifeguard()
     async def edit(self, ctx, infraction_id: int, *, new_reason):
-        infraction = self.infractions.get_infraction(infraction_id)
-        message = await self.bot.get_channel(self.logging_channel).fetch_message(infraction['message_id'])
+        """Edit the reason for an infraction."""
+        try:
+            infraction = await self.db.get_infraction(infraction_id)
+            message = await self.bot.get_channel(self.logging_channel).fetch_message(infraction['message_id'])
+        except Exception as e:
+            return await ctx.send(f'{e.__class__.__name__}: {e}')
         content = '\n'.join(message.content.split('\n')[:-1])
         content += f"\n**Reason:** {new_reason} (edited by {ctx.author})"
         await message.edit(content=content)
         await ctx.send(message.jump_url)
+
+    # @infraction.command()
+    # @checks.lifeguard()
+    # async def claim(self, ctx, infraction_id: int = None):
+    #     """NOT YET IMPLEMENTED."""
+    #     await ctx.send("NOT YET IMPLEMENTED.")
 
 
 def setup(bot):

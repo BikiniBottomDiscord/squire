@@ -1,21 +1,17 @@
-
-import re
-import zlib
 import io
-import os
 import discord
 import asyncio
-import aiohttp
 import subprocess
 import traceback
 import textwrap
 import contextlib
-import random
 import inspect
 import logging
 
 from discord.ext import commands
 from contextlib import redirect_stdout
+
+from utils import checks
 
 
 logger = logging.getLogger('cogs.admin')
@@ -26,6 +22,9 @@ class Admin(commands.Cog):
         self.bot = bot
         self._last_result = None
         self.sessions = set()
+
+    def cog_check(self, ctx):
+        return checks.is_admin(ctx.author)
 
     @staticmethod
     def cleanup_code(content):
@@ -51,16 +50,6 @@ class Admin(commands.Cog):
         if e.text is None:
             return f'```py\n{e.__class__.__name__}: {e}\n```'
         return f'```py\n{e.text}{"^":>{e.offset}}\n{e.__class__.__name__}: {e}```'
-
-    @commands.command()
-    async def test(self, ctx):
-        if random.randint(0, 1) == 1:
-            await ctx.guild.me.edit(nick="Ol' Reliable")
-            await ctx.send("Whoosh whoosh, on HostPls! <:bluejellyfish:479723952265232396> v1.1.0")
-        else:
-            await ctx.guild.me.edit(nick="Jellyfish")
-            await ctx.send("Buzz Buzz, on HostPls! <:jellyfish:479723952890052608> v1.1.0")
-        await ctx.guild.me.edit(nick=None)
 
     @commands.command(name='eval', aliases=['e'])
     async def _eval(self, ctx, *, body: str):
@@ -197,17 +186,6 @@ class Admin(commands.Cog):
                 pass
             except discord.HTTPException as e:
                 await ctx.send(f'Unexpected error: `{e}`')
-
-    @commands.command()
-    async def membercount(self, ctx):
-        await ctx.send(len(await ctx.guild.fetch_members().flatten()))
-
-    @commands.command()
-    async def joinpos(self, ctx, member: discord.Member = None):
-        member = member if member else ctx.author
-        order = sorted((await ctx.guild.fetch_members().flatten()), key=lambda m: m.joined_at)
-        join_pos = order.index(member) + 1
-        await ctx.send(join_pos)
 
 
 def setup(bot):

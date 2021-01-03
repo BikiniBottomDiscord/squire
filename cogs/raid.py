@@ -9,6 +9,8 @@ import logging
 from discord.ext import commands
 from discord.ext import tasks
 
+from utils.checks import is_admin
+
 
 logger = logging.getLogger('cogs.raid')
 
@@ -68,6 +70,9 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         self.last_cache_update = None
 
         self.clean_raid_cache.start()
+
+    def cog_check(self, ctx):
+        return is_admin(ctx.author)
 
     @tasks.loop(minutes=5)
     async def clean_raid_cache(self):

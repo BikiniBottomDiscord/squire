@@ -1,18 +1,14 @@
 import os
 import discord
-import datetime
 import logging
 
 from discord.ext import commands
 
 from utils import settings
+# from utils.checks import is_mod
 
 
 logger = logging.getLogger('bot')
-
-
-def check(user):
-    return user.id in settings.admins
 
 
 class Squire(commands.Bot):
@@ -26,7 +22,7 @@ class Squire(commands.Bot):
         )
         self.version = settings.version
         self.started_at = started_at
-        self.add_check(lambda ctx: check(ctx.author))
+        # self.add_check(lambda ctx: is_mod(ctx.author))
         self._exit_code = 0
 
     async def on_ready(self):
