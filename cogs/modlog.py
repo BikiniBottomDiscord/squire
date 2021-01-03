@@ -32,6 +32,12 @@ class Modlog(commands.Cog):
         self.muted_role = 541810707386335234
         self.last_audit_id = 0
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if not self.db.is_connected:
+            await self.db.connect()
+            logger.info("Connected to database.")
+
     async def log_mute(self, moderator, member, reason):
         infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'mute', reason)
         content = f"{EMOJI_MUTE} **MEMBER MUTED (#{infraction_id})**\n" \
