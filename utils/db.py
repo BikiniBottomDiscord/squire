@@ -51,14 +51,11 @@ class Database:
         query = 'INSERT INTO infractions (user_id, timestamp, mod_id, infraction, reason, message_id) VALUES ($1, now(), $2, $3, $4, 0) RETURNING id'
         infraction_id = await self.conn.fetchval(query, str(user_id), str(moderator_id), infraction_type, reason)
 
-        query = {
-            "mute":   "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1,  $2,  '{}', '{}', '{}', '{}') ON CONFLICT (user_id) DO UPDATE SET mute   = array_cat(mute,   $3) WHERE user_id = $1",
-            "kick":   "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1, '{}',  $2,  '{}', '{}', '{}') ON CONFLICT (user_id) DO UPDATE SET kick   = array_cat(kick,   $3) WHERE user_id = $1",
-            "ban":    "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1, '{}', '{}',  $2,  '{}', '{}') ON CONFLICT (user_id) DO UPDATE SET ban    = array_cat(ban,    $3) WHERE user_id = $1",
-            "unmute": "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1, '{}', '{}', '{}',  $2,  '{}') ON CONFLICT (user_id) DO UPDATE SET unmute = array_cat(unmute, $3) WHERE user_id = $1",
-            "unban":  "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1, '{}', '{}', '{}', '{}',  $2 ) ON CONFLICT (user_id) DO UPDATE SET unban  = array_cat(unban,  $3) WHERE user_id = $1",
-        }[infraction_type]
-        await self.conn.execute(query, user_id, [infraction_id], infraction_id)
+        query = "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1, $2, $3, $4, $5, $6) " \
+                "ON CONFLICT (user_id) DO UPDATE SET $7 = array_cat($7, $8) WHERE user_id = $1"
+        args = [[], [], [], [], []]
+        args[['mute, kick, ban, unmute, unban'].index(infraction_type)] = [infraction_id]
+        await self.conn.execute(query, user_id, *args, infraction_type, infraction_id)
 
         infraction = {'moderator_id': moderator_id, 'user_id': user_id, 'infraction_id': infraction_id, 'infraction_type': infraction_type, 'reason': reason, 'message_id': None}
         self.by_infraction_id[infraction_id] = infraction
