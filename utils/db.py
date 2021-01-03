@@ -42,6 +42,17 @@ class Database:
         infraction = await self.conn.fetchrow('SELECT * FROM infractions WHERE id=($1)', inf_id)
         return infraction
 
+    def get_history(self, user_id):
+        if not self.conn:
+            await self.connect()
+
+        if user_id in self.by_user_id:
+            return self.by_user_id[user_id]
+        query = 'SELECT * FROM user_history WHERE user_id = $1'
+        infractions = await self.conn.fetchrow(query, user_id)
+        self.by_user_id[user_id] = infractions
+        return infractions
+
     async def new_infraction(self, moderator_id, user_id, infraction_type, reason):
         if not self.conn:
             await self.connect()
@@ -69,19 +80,7 @@ class Database:
         query = 'UPDATE infractions SET message_id = $2 WHERE id = $1'
         await self.conn.execute(query, infraction_id, message_id)
 
-    async def edit_infraction(self, infraction_id, reason):
+    async def set_reason(self, infraction_id, reason):
         self.by_infraction_id[infraction_id]['reason'] = reason
         query = 'UPDATE infractions SET reason = $2 WHERE id = $1'
         await self.conn.execute(query, infraction_id, reason)
-
-    def get_infractions(self, user_id):
-        if not self.conn:
-            await self.connect()
-
-        if user_id in self.by_user_id:
-            return self.by_user_id[user_id]
-        query = 'SELECT * FROM user_history WHERE user_id = $1'
-        infractions = await self.conn.fetchrow(query, user_id)
-        self.by_user_id[user_id] = infractions
-        return infractions
-
