@@ -42,7 +42,7 @@ class Database:
         infraction = await self.conn.fetchrow('SELECT * FROM infractions WHERE id=($1)', inf_id)
         return infraction
 
-    def get_history(self, user_id):
+    async def get_history(self, user_id):
         if not self.conn:
             await self.connect()
 

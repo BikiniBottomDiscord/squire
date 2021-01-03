@@ -17,8 +17,12 @@ def is_mod(user):
 
 
 def hall_monitor():
-    return commands.check(is_admin)
+    async def func(ctx):
+        return is_admin(ctx.author)
+    return commands.check(func)
 
 
 def lifeguard():
-    return commands.check(is_mod)
+    async def func(ctx):
+        return is_mod(ctx.author)
+    return commands.check(func)

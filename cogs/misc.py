@@ -3,6 +3,8 @@ import random
 
 from discord.ext import commands
 
+from utils import settings
+
 
 class Misc(commands.Cog):
     def __init__(self, bot):
@@ -23,10 +25,10 @@ class Misc(commands.Cog):
     async def test(self, ctx):
         if random.randint(0, 1):
             await ctx.guild.me.edit(nick="Ol' Reliable")
-            await ctx.send("Whoosh whoosh, on HostPls! <:bluejellyfish:479723952265232396> v1.1.0")
+            await ctx.send(f"Whoosh whoosh, on HostPls! <:bluejellyfish:479723952265232396> v{settings.version}")
         else:
             await ctx.guild.me.edit(nick="Jellyfish")
-            await ctx.send("Buzz Buzz, on HostPls! <:jellyfish:479723952890052608> v1.1.0")
+            await ctx.send(f"Buzz Buzz, on HostPls! <:jellyfish:479723952890052608> v{settings.version}")
         await ctx.guild.me.edit(nick=None)
 
 
