@@ -6,4 +6,4 @@ docker run -d \
  -v $PWD/logs:/squire/logs \
  -v $PWD/data:/squire/data \
  --restart unless-stopped \
- squire
+ squire --debug

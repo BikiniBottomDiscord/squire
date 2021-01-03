@@ -1,5 +1,6 @@
 import discord
 import random
+import sys
 
 from discord.ext import commands
 
@@ -23,6 +24,7 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def test(self, ctx):
+        whereami = ['HostPls' if sys.platform == "linux" else 'Windows']
         if random.randint(0, 1):
             await ctx.guild.me.edit(nick="Ol' Reliable")
             await ctx.send(f"Whoosh whoosh, on HostPls! <:bluejellyfish:479723952265232396> v{settings.version}")

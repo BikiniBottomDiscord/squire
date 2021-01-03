@@ -60,7 +60,7 @@ class Database:
         logger.debug(f"adding infraction {(moderator_id, user_id, infraction_type, reason)}")
 
         query = 'INSERT INTO infractions (user_id, timestamp, mod_id, infraction, reason, message_id) VALUES ($1, now(), $2, $3, $4, 0) RETURNING id'
-        infraction_id = await self.conn.fetchval(query, str(user_id), str(moderator_id), infraction_type, reason)
+        infraction_id = await self.conn.fetchval(query, user_id, moderator_id, infraction_type, reason)
 
         query = "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1, $2, $3, $4, $5, $6) " \
                 "ON CONFLICT (user_id) DO UPDATE SET $7 = array_cat($7, $8) WHERE user_id = $1"
