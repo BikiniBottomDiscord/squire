@@ -75,6 +75,8 @@ class Database:
             self.by_user_id[user_id] = {'mute': [], 'ban': [], 'kick': [], 'unmute': [], 'unban': []}
         self.by_user_id[user_id][infraction_type].append(infraction_id)
 
+        return infraction_id
+
     async def set_message_id(self, infraction_id, message_id):
         await self.get_infraction(infraction_id)  # for cache
         self.by_infraction_id[infraction_id]['message_id'] = message_id
