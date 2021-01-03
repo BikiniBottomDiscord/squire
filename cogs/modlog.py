@@ -44,7 +44,7 @@ class Modlog(commands.Cog):
                   f"**Moderator:** {moderator}\n" \
                   f"**Reason:** {reason}"
         message = await self.bot.get_channel(self.logging_channel).send(content)
-        await self.db.set_message_id(str(infraction_id), str(message.id))
+        await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_kick(self, moderator, member, reason):
         infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'kick', reason)
@@ -53,7 +53,7 @@ class Modlog(commands.Cog):
                   f"**Moderator:** {moderator}\n" \
                   f"**Reason:** {reason}"
         message = await self.bot.get_channel(self.logging_channel).send(content)
-        await self.db.set_message_id(str(infraction_id), str(message.id))
+        await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_ban(self, moderator, member, reason):
         infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'ban', reason)
@@ -62,7 +62,7 @@ class Modlog(commands.Cog):
                   f"**Moderator:** {moderator}\n" \
                   f"**Reason:** {reason}"
         message = await self.bot.get_channel(self.logging_channel).send(content)
-        await self.db.set_message_id(str(infraction_id), str(message.id))
+        await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_forceban(self, moderator, user, reason):
         infraction_id = await self.db.new_infraction(str(moderator.id), str(user.id), 'ban', reason)
@@ -71,7 +71,7 @@ class Modlog(commands.Cog):
                   f"**Moderator:** {moderator}\n" \
                   f"**Reason:** {reason}"
         message = await self.bot.get_channel(self.logging_channel).send(content)
-        await self.db.set_message_id(str(infraction_id), str(message.id))
+        await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_unmute(self, moderator, member, reason):
         infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'unmute', reason)
@@ -80,7 +80,7 @@ class Modlog(commands.Cog):
                   f"**Moderator:** {moderator}\n" \
                   f"**Reason:** {reason}"
         message = await self.bot.get_channel(self.logging_channel).send(content)
-        await self.db.set_message_id(str(infraction_id), str(message.id))
+        await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_unban(self, moderator, user, reason):
         infraction_id = await self.db.new_infraction(str(moderator.id), str(user.id), 'unban', reason)
@@ -89,7 +89,7 @@ class Modlog(commands.Cog):
                   f"**Moderator:** {moderator}\n" \
                   f"**Reason:** {reason}"
         message = await self.bot.get_channel(self.logging_channel).send(content)
-        await self.db.set_message_id(str(infraction_id), str(message.id))
+        await self.db.set_message_id(infraction_id, str(message.id))
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
@@ -209,7 +209,7 @@ class Modlog(commands.Cog):
     async def infraction(self, ctx, infraction_id: int):
         """Base command for modlog. Passing an int will return the link to the message associated with a particular infraction."""
         try:
-            infraction = await self.db.get_infraction(str(infraction_id))
+            infraction = await self.db.get_infraction(infraction_id)
             message_id = infraction['message_id']
             message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
         except Exception as e:
@@ -221,7 +221,7 @@ class Modlog(commands.Cog):
     async def view(self, ctx, infraction_id: int):
         """View the logged message for an infraction."""
         try:
-            infraction = await self.db.get_infraction(str(infraction_id))
+            infraction = await self.db.get_infraction(infraction_id)
             message_id = infraction['message_id']
             message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
         except Exception as e:
@@ -233,7 +233,7 @@ class Modlog(commands.Cog):
     async def json(self, ctx, infraction_id: int):
         """View the database entry for an infraction in JSON format."""
         try:
-            infraction = await self.db.get_infraction(str(infraction_id))
+            infraction = await self.db.get_infraction(infraction_id)
         except Exception as e:
             return await ctx.send(f'{e.__class__.__name__}: {e}')
         await ctx.send("```json\n" + json.dumps(infraction, indent=4) + "\n```")
@@ -253,7 +253,7 @@ class Modlog(commands.Cog):
     async def edit(self, ctx, infraction_id: int, *, new_reason):
         """Edit the reason for an infraction."""
         try:
-            infraction = await self.db.get_infraction(str(infraction_id))
+            infraction = await self.db.get_infraction(infraction_id)
             message = await self.bot.get_channel(self.logging_channel).fetch_message(infraction['message_id'])
         except Exception as e:
             return await ctx.send(f'{e.__class__.__name__}: {e}')
