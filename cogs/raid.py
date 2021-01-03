@@ -11,7 +11,6 @@ from discord.ext import tasks
 
 from utils.checks import is_admin
 
-
 logger = logging.getLogger('cogs.raid')
 
 

@@ -13,7 +13,6 @@ from contextlib import redirect_stdout
 
 from utils import checks
 
-
 logger = logging.getLogger('cogs.admin')
 
 

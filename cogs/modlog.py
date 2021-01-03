@@ -10,7 +10,6 @@ from utils import checks
 from utils import db
 from utils.converters import FetchedUser
 
-
 logger = logging.getLogger('cogs.modlog')
 
 

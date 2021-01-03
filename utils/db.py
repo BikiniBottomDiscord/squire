@@ -4,7 +4,6 @@ from typing import Optional
 
 from auth import POSTGRES_PASSWORD
 
-
 logger = logging.getLogger('utils.db')
 
 
@@ -64,12 +63,13 @@ class Database:
 
         logger.debug(f"updating user history for {user_id} with infraction {infraction_id} ({infraction_type})")
         query = "INSERT INTO user_history (user_id, mute, kick, ban, unmute, unban) VALUES ($1, $2, $3, $4, $5, $6) " \
-                "ON CONFLICT (user_id) DO UPDATE SET $7 = array_cat($7, $8) WHERE user_id = $1;"
+                f"ON CONFLICT (user_id) DO UPDATE SET {infraction_type} = array_cat({infraction_type}, $7) WHERE user_id = $1;"
         args = [[], [], [], [], []]
         args[['mute, kick, ban, unmute, unban'].index(infraction_type)] = [infraction_id]
-        await self.conn.execute(query, user_id, *args, infraction_type, infraction_id)
+        await self.conn.execute(query, user_id, *args, infraction_id)
 
-        infraction = {'moderator_id': moderator_id, 'user_id': user_id, 'infraction_id': infraction_id, 'infraction_type': infraction_type, 'reason': reason, 'message_id': None}
+        infraction = {'moderator_id': moderator_id, 'user_id': user_id, 'infraction_id': infraction_id, 'infraction_type': infraction_type,
+                      'reason': reason, 'message_id': None}
         self.by_infraction_id[infraction_id] = infraction
 
         if user_id not in self.by_user_id.keys():
