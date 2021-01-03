@@ -77,13 +77,8 @@ class SphinxObjectFileReader:
 class RDanny(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.session = aiohttp.ClientSession()
         self.issue = re.compile(r'##(?P<number>[0-9]+)')
         self._recently_blocked = set()
-
-    def cog_unload(self):
-        self.bot.session.close()
-        del self.bot.session
 
     def parse_object_inv(self, stream, url):
         # key: URL

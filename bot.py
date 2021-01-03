@@ -1,6 +1,7 @@
 import os
 import discord
 import logging
+import aiohttp
 
 from discord.ext import commands
 
@@ -22,6 +23,7 @@ class Squire(commands.Bot):
         )
         self.version = settings.version
         self.started_at = started_at
+        self.session = aiohttp.ClientSession()
         # self.add_check(lambda ctx: is_mod(ctx.author))
         self._exit_code = 0
 
@@ -46,5 +48,10 @@ class Squire(commands.Bot):
             except commands.ExtensionFailed as e:
                 logger.exception(f"Failed to load cog {cog} [{e.__class__.__name__}: {e}]")
         logger.info('Cogs loaded.')
+
+    async def close(self):
+        await self.session.close()
+        del self.session
+        await super().close()
 
 

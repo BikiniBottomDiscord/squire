@@ -1,10 +1,10 @@
 import discord
 import random
-import sys
 
 from discord.ext import commands
 
 from utils import settings
+from utils.parser import ARGS
 
 
 class Misc(commands.Cog):
@@ -24,13 +24,13 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def test(self, ctx):
-        whereami = ['HostPls' if sys.platform == "linux" else 'Windows']
+        whereami = 'Windows' if ARGS.dev else 'HostPls'
         if random.randint(0, 1):
             await ctx.guild.me.edit(nick="Ol' Reliable")
-            await ctx.send(f"Whoosh whoosh, on HostPls! <:bluejellyfish:479723952265232396> v{settings.version}")
+            await ctx.send(f"Whoosh whoosh, on {whereami}! <:bluejellyfish:479723952265232396> v{settings.version}")
         else:
             await ctx.guild.me.edit(nick="Jellyfish")
-            await ctx.send(f"Buzz Buzz, on HostPls! <:jellyfish:479723952890052608> v{settings.version}")
+            await ctx.send(f"Buzz Buzz, on {whereami}! <:jellyfish:479723952890052608> v{settings.version}")
         await ctx.guild.me.edit(nick=None)
 
 

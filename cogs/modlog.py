@@ -13,8 +13,8 @@ from utils.converters import FetchedUser
 logger = logging.getLogger('cogs.modlog')
 
 
-EMOJI_MUTE = "<hoopla:718369341162258482>"
-EMOJI_KICK = "<howmanytimes:502338448951083020>"
+EMOJI_MUTE = "<:hoopla:718369341162258482>"
+EMOJI_KICK = "<:howmanytimes:502338448951083020>"
 EMOJI_BAN = "<:rage:642234025640984606>"
 EMOJI_UNMUTE = "<:patpog:718369341816700958>"
 EMOJI_UNBAN = "<:thankful:589318185183084554>"

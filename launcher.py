@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from bot import Squire
 from auth import TOKEN
 from utils.utility import setup_logger
+from utils.parser import ARGS
 
 
 logger = logging.getLogger('launcher')
@@ -14,11 +15,7 @@ started_at = datetime.datetime.now()
 
 def main():
 
-    parser = ArgumentParser(description="Start the bot")
-    parser.add_argument('--debug', '-d', action='store_true')
-
-    args = parser.parse_args()
-    debug = args.debug
+    debug = ARGS.debug
 
     setup_logger('discord', False, started_at)
     setup_logger('launcher', debug, started_at)
