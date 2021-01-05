@@ -236,7 +236,7 @@ class Modlog(commands.Cog):
             infraction = await self.db.get_infraction(infraction_id)
         except Exception as e:
             return await ctx.send(f'{e.__class__.__name__}: {e}')
-        await ctx.send("```json\n" + json.dumps(infraction, indent=4) + "\n```")
+        await ctx.send("```py\n" + str(dict(infraction)) + "\n```")
 
     @infraction.command()
     @checks.lifeguard()
@@ -246,7 +246,7 @@ class Modlog(commands.Cog):
             infractions = await self.db.get_history(str(user.id))
         except Exception as e:
             return await ctx.send(f'{e.__class__.__name__}: {e}')
-        await ctx.send("```json\n" + json.dumps(infractions, indent=4) + "\n```")
+        await ctx.send("```py\n" + str(dict(infractions)) + "\n```")
 
     @infraction.command()
     @checks.lifeguard()
