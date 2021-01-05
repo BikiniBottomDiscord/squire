@@ -64,7 +64,7 @@ class Database:
 
         in_db = await self.conn.fetchval('SELECT exists(SELECT 1 FROM user_history WHERE user_id = $1)', user_id)
         if in_db:
-            await self.conn.execute(f'UPDATE user_history SET {infraction_type} = array_cat({infraction_type}, $2) WHERE user_id = $1', user_id, infraction_id)
+            await self.conn.execute(f'UPDATE user_history SET {infraction_type} = array_append({infraction_type}, $2) WHERE user_id = $1', user_id, infraction_id)
         else:
             args = ([], [], [], [], [])
             args[['mute', 'kick', 'ban', 'unmute', 'unban'].index(infraction_type)].append(infraction_id)
