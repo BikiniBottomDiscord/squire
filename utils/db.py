@@ -88,13 +88,13 @@ class Database:
         await self.conn.execute(query, infraction_id, message_id)
 
     async def set_reason(self, infraction_id, reason):
-        # await self.get_infraction(infraction_id)  # for cache
-        self.by_infraction_id[infraction_id]['reason'] = reason
         query = 'UPDATE infractions SET reason = $2 WHERE id = $1 RETURNING *'
-        return await self.conn.fetchrow(query, infraction_id, reason)
+        row = await self.conn.fetchrow(query, infraction_id, reason)
+        self.by_infraction_id[infraction_id] = row
+        return row
 
     async def set_mod_id(self, infraction_id, mod_id):
-        # await self.get_infraction(infraction_id)  # for cache
-        self.by_infraction_id[infraction_id]['mod_id'] = mod_id
         query = 'UPDATE infractions SET mod_id = $2 WHERE id = $1 RETURNING *'
-        return await self.conn.fetchrow(query, infraction_id, mod_id)
+        row = await self.conn.fetchrow(query, infraction_id, mod_id)
+        self.by_infraction_id[infraction_id] = row
+        return row

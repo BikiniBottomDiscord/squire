@@ -213,6 +213,7 @@ class Modlog(commands.Cog):
             message_id = infraction['message_id']
             message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
         except Exception as e:
+            logger.exception(e)
             return await ctx.send(f'{e.__class__.__name__}: {e}')
         await ctx.send(message.jump_url)
 
@@ -225,6 +226,7 @@ class Modlog(commands.Cog):
             message_id = infraction['message_id']
             message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
         except Exception as e:
+            logger.exception(e)
             return await ctx.send(f'{e.__class__.__name__}: {e}')
         await ctx.send(message.content)
 
@@ -235,6 +237,7 @@ class Modlog(commands.Cog):
         try:
             infraction = await self.db.get_infraction(infraction_id)
         except Exception as e:
+            logger.exception(e)
             return await ctx.send(f'{e.__class__.__name__}: {e}')
         await ctx.send("```py\n" + str(dict(infraction)) + "\n```")
 
@@ -245,6 +248,7 @@ class Modlog(commands.Cog):
         try:
             infractions = await self.db.get_history(str(user.id))
         except Exception as e:
+            logger.exception(e)
             return await ctx.send(f'{e.__class__.__name__}: {e}')
         await ctx.send("```py\n" + str(dict(infractions)) + "\n```")
 
@@ -253,15 +257,13 @@ class Modlog(commands.Cog):
     async def edit(self, ctx, infraction_id: int, *, new_reason):
         """Edit the reason for an infraction."""
         try:
-            logger.debug("line 256")
             infraction = await self.db.set_reason(infraction_id, new_reason)
-            logger.debug("line 258")
             message = await self.bot.get_channel(self.logging_channel).fetch_message(infraction['message_id'])
-            logger.debug("line 260")
             content = '\n'.join(message.content.split('\n')[:-1])
             content += f"\n**Reason:** {new_reason} (edited by {ctx.author})"
             await message.edit(content=content)
         except Exception as e:
+            logger.exception(e)
             return await ctx.send(f'{e.__class__.__name__}: {e}')
         await ctx.send(message.jump_url)
 
