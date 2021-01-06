@@ -254,18 +254,15 @@ class Modlog(commands.Cog):
         """Edit the reason for an infraction."""
         try:
             logger.debug("line 256")
-            infraction = await self.db.get_infraction(infraction_id)
+            infraction = await self.db.set_reason(infraction_id, new_reason)
             logger.debug("line 258")
             message = await self.bot.get_channel(self.logging_channel).fetch_message(infraction['message_id'])
+            logger.debug("line 260")
+            content = '\n'.join(message.content.split('\n')[:-1])
+            content += f"\n**Reason:** {new_reason} (edited by {ctx.author})"
+            await message.edit(content=content)
         except Exception as e:
             return await ctx.send(f'{e.__class__.__name__}: {e}')
-        logger.debug("line 262")
-        content = '\n'.join(message.content.split('\n')[:-1])
-        content += f"\n**Reason:** {new_reason} (edited by {ctx.author})"
-        await self.db.set_reason(infraction_id, new_reason)
-        logger.debug("line 266")
-        await message.edit(content=content)
-        logger.debug("line 268")
         await ctx.send(message.jump_url)
 
     # @infraction.command()
