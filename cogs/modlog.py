@@ -259,7 +259,7 @@ class Modlog(commands.Cog):
             return await ctx.send(f'{e.__class__.__name__}: {e}')
         content = '\n'.join(message.content.split('\n')[:-1])
         content += f"\n**Reason:** {new_reason} (edited by {ctx.author})"
-        await self.db.set_reason(infraction['id'], new_reason)
+        await self.db.set_reason(infraction_id, new_reason)
         await message.edit(content=content)
         await ctx.send(message.jump_url)
 
