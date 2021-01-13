@@ -74,7 +74,7 @@ class Database:
                       'reason': reason, 'message_id': None}
         self.by_infraction_id[infraction_id] = infraction
 
-        if user_id not in self.by_user_id.keys():
+        if user_id not in self.by_user_id or not self.by_user_id[user_id]:
             self.by_user_id[user_id] = {'mute': [], 'ban': [], 'kick': [], 'unmute': [], 'unban': []}
         self.by_user_id[user_id][infraction_type].append(infraction_id)
 
