@@ -1,15 +1,17 @@
-
-import discord
+import aiohttp
+import argparse
+import asyncio
 import datetime
+import discord
+import logging
 import re
 import typing
-import asyncio
-import logging
 
 from discord.ext import commands
 from discord.ext import tasks
 
 from utils.checks import is_admin
+from utils.converters import FetchedUser
 
 logger = logging.getLogger('cogs.raid')
 
@@ -36,10 +38,18 @@ BAD_NOODLE = 541810707386335234
 CACHE_REMOVE_AGE_THRESHOLD = 20  # minutes
 
 
+async def confirm_action(ctx, prompt):
+    m = await ctx.send(prompt)
+
+    def check(_msg):
+        return _msg.author == ctx.author
+
+    message = await ctx.bot.wait_for('message', check=check)
+    return message.content.lower() in ['y', 'yes']
+
+
 class TimeDelta(commands.Converter):
-    async def convert(self, ctx, argument):
-        if argument.lower() == '--':
-            return None
+    def convert_to_time(self, argument):
         match = re.match(TIME_PATTERN, argument)
         if match:
             count = match.group(1)
@@ -49,6 +59,9 @@ class TimeDelta(commands.Converter):
             elif unit == 'm':
                 return datetime.timedelta(minutes=int(count))
         raise commands.BadArgument
+
+    async def convert(self, ctx, argument):
+        return self.convert_to_time(argument)
 
 
 class WARNING_EXPERIMENTAL(commands.Cog):
@@ -140,7 +153,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
 
     @commands.command()
-    async def dump_cache_size(self, ctx):
+    async def raidcache(self, ctx):
         await ctx.send(f"__RAID CACHE:__\n"
                        f"> cached_messages: {len(self.cached_messages)}\n"
                        f"> cached_joins: {len(self.cached_joins)}\n"
@@ -148,44 +161,77 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                        f"cache last updated {self.last_cache_update}"
                        )
 
+    async def execute_massban(self, ctx, users):
+        confirmation = await confirm_action(ctx, f"Are you sure you would like to ban {len(users)} users?")
+
+        if confirmation:
+            await ctx.send("Banning...")
+            success = 0
+            failed = 0
+            for user in users:
+                if isinstance(user, str):
+                    user = int(user)
+                if isinstance(user, int):
+                    user = discord.Object(user)
+                try:
+                    await ctx.guild.ban(user, reason=f'Mass ban by {ctx.author}')
+                    success += 1
+                except discord.DiscordException:
+                    failed += 1
+            await ctx.send(f"Done. {success} successes, {failed} failures.")
+
+        else:
+            await ctx.send("Canceled!")
+
+    @commands.group(invoke_without_command=True)
+    async def mban(self, ctx, *users: typing.Union[discord.Member, discord.User, int]):
+        """Bans a list of users"""
+        await self.execute_massban(ctx, users)
+
+    @mban.command()
+    async def file(self, ctx):
+        """Mass bans users from a text file."""
+        try:
+            users = (await ctx.attachments[0].read()).decode().split()
+        except Exception as e:
+            return await ctx.send(f"Failed to read file: ```py\n{e.__class__.__name__}: {e}\n```")
+
+        await self.execute_massban(ctx, users)
+
+    @mban.command()
+    async def url(self, ctx, url):
+        """Mass bans from a pastebin URL."""
+        confirmation = await confirm_action(ctx, "Are you sure this is a valid URL? (Must be the **raw** text!)")
+
+        if confirmation:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as resp:
+                        text = await resp.text()
+                        users = text.split()
+            except Exception as e:
+                return await ctx.send(f"Failed to read url: ```py\n{e.__class__.__name__}: {e}\n```")
+
+            await self.execute_massban(ctx, users)
+
+        else:
+            await ctx.send("Canceled!")
+
     @commands.command()
-    async def post_raid(self, ctx, channel: typing.Optional[discord.TextChannel] = None, approx_time: typing.Optional[TimeDelta] = None, *keywords):
-        """INCOMPLETE"""
-        return await ctx.send("This command is not ready yet.")
-        channel = channel if channel else ctx.channel
-        now = datetime.datetime.now()
-        flagged_members = set()
-        ignored_members = set()
-        flagged_messages = []
-
-        for message in self.cached_messages:
-            if message.channel == channel:
-                if approx_time and (now - message.created_at) > approx_time:  # ignore messages
-                    continue
-                if message.author in ignored_members:  # members who are safe
-                    continue
-                if [role for role in message.author.roles if role.id not in ROLES]:  # if they have any roles not in this list, they're safe.
-                    ignored_members.add(message.author)
-                    continue
-
-
-                # process messages here, dump text file with list of IDs of suspected members involved in raid.
-                #  - scan requested duration, whole cache otherwise (make it an approximate duration)
-                #  - common content
-                #  - presence of keywords
-                #  - similar join time?
-                #  - joined with same invite?
-                #  - ignore members > some role
-
+    async def del_invite(self, ctx, invite_code):
+        """Delete an invite."""
+        invites = await ctx.guild.invite()
+        for invite in invites:
+            if invite.code == invite_code:
+                try:
+                    await invite.delete()
+                    return await ctx.send(f"Deleted invite {invite_code}!")
+                except Exception as e:
+                    return await ctx.send(f"Could not delete invite {invite_code}: ```py\n{e.__class__.__name__}: {e}\n```")
+        await ctx.send(f"Could not find invite {invite_code}.")
 
     @commands.command()
-    async def get_bot_joins(self, ctx, channel=None, approx_bot_count: int = None):
-        """INCOMPLETE"""
-        return await ctx.send("This command is not ready yet.")  # unsure about this one. maybe do something similar to post_raid or put an approximate count in that command?
-
-
-    @commands.command()
-    async def count_suspicious_joins(self, ctx):
+    async def analyze_joins(self, ctx):
         now = datetime.datetime.now()
         join_count = len(self.cached_joins)
         invite_count = len(self.cached_invites)
@@ -233,6 +279,45 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             analysis += f"`{recently_created}` new members joined within 1 hour of account creation\n"
 
         await ctx.send(analysis)
+
+    @commands.command()
+    async def post_raid(self, ctx, *args):
+        """INCOMPLETE"""
+        return await ctx.send("This command is not ready yet.")
+
+        parser = argparse.ArgumentParser(exit_on_error=False)
+        parser.add_argument('--channel', type=lambda arg: ctx.bot.get_channel(int(arg)))
+        parser.add_argument('--time', type=TimeDelta().convert_to_time)
+        parser.add_argument('--count', type=int)
+        parser.add_argument('--content', type=lambda arg: re.compile(arg.strip('`')))
+        # parser.add_argument('--invite')
+        args = parser.parse_args(args)
+
+        channel = args.channel or ctx.channel
+        now = datetime.datetime.now()
+        approx_time = args.time
+
+        flagged_members = set()
+        ignored_members = set()
+        flagged_messages = []
+
+        for message in self.cached_messages:
+            if message.channel == channel:
+                if approx_time and (now - message.created_at) > approx_time:  # ignore messages
+                    continue
+                if message.author in ignored_members:  # members who are safe
+                    continue
+                if [role for role in message.author.roles if role.id not in ROLES]:  # if they have any roles not in this list, they're safe.
+                    ignored_members.add(message.author)
+                    continue
+
+                # process messages here, dump text file with list of IDs of suspected members involved in raid.
+                #  - scan requested duration, whole cache otherwise (make it an approximate duration)
+                #  - common content
+                #  - presence of keywords
+                #  - similar join time?
+                #  - joined with same invite?
+                #  - ignore members > some role
 
 
 def setup(bot):
