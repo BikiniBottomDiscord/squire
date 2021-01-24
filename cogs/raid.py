@@ -154,6 +154,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     @commands.command()
     async def raidcache(self, ctx):
+        """Display the contents of sQUIRE's raid cache."""
         await ctx.send(f"__RAID CACHE:__\n"
                        f"> cached_messages: {len(self.cached_messages)}\n"
                        f"> cached_joins: {len(self.cached_joins)}\n"
@@ -200,7 +201,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     @mban.command()
     async def url(self, ctx, url):
-        """Mass bans from a pastebin URL."""
+        """Mass bans from a pastebin URL. Must be the RAW text url."""
         confirmation = await confirm_action(ctx, "Are you sure this is a valid URL? (Must be the **raw** text!)")
 
         if confirmation:
@@ -232,6 +233,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     @commands.command()
     async def analyze_joins(self, ctx):
+        """Run some diagnostics on recent joins and return any notable information."""
         now = datetime.datetime.now()
         join_count = len(self.cached_joins)
         invite_count = len(self.cached_invites)
@@ -380,7 +382,19 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     async def post_raid(self, ctx, *cmd_args):
-        """INCOMPLETE"""
+        """Run a post-raid analysis, generating a list of user IDs. Outputs to a text file.
+
+        Argument options:
+        --channel CHANNEL    The channel to check messages from. Defaults to current channel.
+                             '.' is shorthand for current channel, '*' is shorthand for "any channel".
+        --time TIME          Maximum message age. This will ignore messages older than the duration requested.
+        --count COUNT        Estimated user count. Currently does not affect this command's behavior.
+        --content CONTENT    Flag messages containing a particular substring.
+        --mentions MENTIONS  Flag messages containing MENTIONS or more mentions.
+        --invite             Bool, indicates that messages matching discord invite regex should be flagged.
+        --clean              Bool, indicates that flagged messages should be bulk deleted.
+        --ban                Bool, indicates that flagged users should be mass banned.
+        """
         parser = ArgumentParser()
         parser.add_argument('--channel')
         parser.add_argument('--time', type=TimeDelta().convert_to_time)
@@ -420,7 +434,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         )
 
     @post_raid.command()
-    async def content(self, ctx, channel: discord.TextChannel, content: str, delete: bool = False):
+    async def content(self, ctx, channel: discord.TextChannel, content: str, clean: bool = False):
         """Shortcut to process a channel based on a message's content."""
         if content.strip() == "":
             return await ctx.send("Content cannot be blank! Remember to provide a channel and message content.")
@@ -433,12 +447,12 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             msg_content=content,
             mention_count_threshold=None,
             msg_contains_invite=False,
-            clean_at_end=delete,
+            clean_at_end=clean,
             ban_at_end=False
         )
 
     @post_raid.command()
-    async def mentions(self, ctx, channel: discord.TextChannel, mentions: int = 15, delete: bool = False):
+    async def mentions(self, ctx, channel: discord.TextChannel, mentions: int = 15, clean: bool = False):
         """Shortcut to process a channel based on a message's mention count. Mention count threshold defaults to 15."""
         await self.execute_post_raid_cleanup(
             ctx=ctx,
@@ -449,7 +463,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             msg_content=None,
             mention_count_threshold=mentions,
             msg_contains_invite=False,
-            clean_at_end=delete,
+            clean_at_end=clean,
             ban_at_end=False
         )
 
