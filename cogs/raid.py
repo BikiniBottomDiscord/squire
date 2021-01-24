@@ -1,17 +1,17 @@
 import aiohttp
-import argparse
 import asyncio
 import datetime
 import discord
 import logging
 import re
+import io
 import typing
 
 from discord.ext import commands
 from discord.ext import tasks
 
 from utils.checks import is_admin
-from utils.converters import FetchedUser
+from utils.argparse_but_better import ArgumentParser
 
 logger = logging.getLogger('cogs.raid')
 
@@ -181,7 +181,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             await ctx.send(f"Done. {success} successes, {failed} failures.")
 
         else:
-            await ctx.send("Canceled!")
+            await ctx.send("Cancelled!")
 
     @commands.group(invoke_without_command=True)
     async def mban(self, ctx, *users: typing.Union[discord.Member, discord.User, int]):
@@ -192,7 +192,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
     async def file(self, ctx):
         """Mass bans users from a text file."""
         try:
-            users = (await ctx.attachments[0].read()).decode().split()
+            users = (await ctx.message.attachments[0].read()).decode().split()
         except Exception as e:
             return await ctx.send(f"Failed to read file: ```py\n{e.__class__.__name__}: {e}\n```")
 
@@ -215,7 +215,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             await self.execute_massban(ctx, users)
 
         else:
-            await ctx.send("Canceled!")
+            await ctx.send("Cancelled!")
 
     @commands.command()
     async def del_invite(self, ctx, invite_code):
@@ -280,36 +280,82 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
         await ctx.send(analysis)
 
-    @commands.command()
-    async def post_raid(self, ctx, *args):
-        """INCOMPLETE"""
-        return await ctx.send("This command is not ready yet.")
+    async def execute_post_raid_cleanup(
+            self, ctx: commands.Context,
+            channel: discord.TextChannel,
+            approx_msg_time: datetime.timedelta = None,
+            approx_join_time: datetime.timedelta = None,
+            user_count: int = None,
+            msg_content: str = None,
+            mention_count_threshold: int = None,
+            msg_contains_invite: bool = False,
+            clean_at_end: bool = False,
+            ban_at_end: bool = False
+    ):
+        """Runs an analysis on message cache and returns a list of flagged users."""
 
-        parser = argparse.ArgumentParser(exit_on_error=False)
-        parser.add_argument('--channel', type=lambda arg: ctx.bot.get_channel(int(arg)))
-        parser.add_argument('--time', type=TimeDelta().convert_to_time)
-        parser.add_argument('--count', type=int)
-        parser.add_argument('--content', type=lambda arg: re.compile(arg.strip('`')))
-        # parser.add_argument('--invite')
-        args = parser.parse_args(args)
+        await ctx.send(
+            f"Executing post-raid cleanup with args ```\n(\n"
+            f"    channel={str(channel)}\n"
+            f"    {approx_msg_time=}\n"
+            f"    {approx_join_time=}\n"
+            f"    {user_count=}\n"
+            f"    {msg_content=}\n"
+            f"    {mention_count_threshold=}\n"
+            f"    {msg_contains_invite=}\n"
+            f"    {clean_at_end=}\n"
+            f"    {ban_at_end=}\n"
+            f")\n```"
+        )
 
-        channel = args.channel or ctx.channel
         now = datetime.datetime.now()
-        approx_time = args.time
 
         flagged_members = set()
         ignored_members = set()
-        flagged_messages = []
+        flagged_messages = set()
 
-        for message in self.cached_messages:
-            if message.channel == channel:
-                if approx_time and (now - message.created_at) > approx_time:  # ignore messages
+        invite_regex = re.compile(r"(?:https?://)?discord.(?:com/invite|gg)/\w+")
+
+        for message in self.cached_messages.copy():
+            if not channel or message.channel == channel:
+
+                logger.debug(f"checking message {message.id} by user {message.author.id}")
+
+                # check reasons to ignore a user/message
+                if message.author.id in ignored_members:  # members who are safe
+                    logger.debug("  member in ignored_members")
                     continue
-                if message.author in ignored_members:  # members who are safe
-                    continue
-                if [role for role in message.author.roles if role.id not in ROLES]:  # if they have any roles not in this list, they're safe.
+                # if any((role.id not in ROLES) for role in message.author.roles):  # if they have any roles not in this list, they're safe.
+                #     logger.debug("  member has roles not in ROLES")
+                #     ignored_members.add(message.author.id)
+                #     continue
+                if approx_join_time and (now - message.author.joined_at) > approx_join_time:  # ignore old users
+                    logger.debug("  member is ignored due to account age")
                     ignored_members.add(message.author)
                     continue
+                if approx_msg_time and (now - message.created_at) > approx_msg_time:  # ignore old messages
+                    logger.debug("  message is ignored due to message age")
+                    continue
+
+                # check message against flag criteria
+                logger.debug("  checking message against flag criteria")
+                if mention_count_threshold:
+                    if len(message.mentions) >= mention_count_threshold:
+                        flagged_messages.add(message)
+                        flagged_members.add(message.author.id)
+                        continue
+                    else:
+                        logger.debug(f"    message did not meet mention threshold ({len(message.mentions)=})")
+                if msg_contains_invite:
+                    if invite_regex.search(message.content.lower()):
+                        flagged_messages.add(message)
+                        flagged_members.add(message.author.id)
+                        continue
+                if msg_content:
+                    if msg_content in message.content.lower():
+                        flagged_messages.add(message)
+                        flagged_members.add(message.author.id)
+                        continue
 
                 # process messages here, dump text file with list of IDs of suspected members involved in raid.
                 #  - scan requested duration, whole cache otherwise (make it an approximate duration)
@@ -318,6 +364,94 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                 #  - similar join time?
                 #  - joined with same invite?
                 #  - ignore members > some role
+
+        text = "\n".join([str(i) for i in flagged_members])
+        fp = io.StringIO(text)
+        await ctx.send(f"Flagged {len(flagged_members)} users.", file=discord.File(fp, "FLAGGED_USERS.txt"))
+
+        if clean_at_end:
+            # TODO
+            await ctx.send("Message cleaning is currently not implemented.")
+
+        if ban_at_end:
+            # TODO
+            await ctx.send("Mass banning is currently not implemented.")
+            # await self.execute_massban(ctx, flagged_members)
+
+    @commands.group(invoke_without_command=True)
+    async def post_raid(self, ctx, *cmd_args):
+        """INCOMPLETE"""
+        parser = ArgumentParser()
+        parser.add_argument('--channel')
+        parser.add_argument('--time', type=TimeDelta().convert_to_time)
+        parser.add_argument('--count', type=int)
+        parser.add_argument('--content')
+        parser.add_argument('--mentions', type=int)
+        parser.add_argument('--invite', action='store_true')
+        # parser.add_argument('--regex', type=lambda arg: re.compile(arg.strip('`')))
+        parser.add_argument('--clean', action='store_true')
+        parser.add_argument('--ban', action='store_true')
+        args = parser.parse_args(cmd_args)
+
+        if args.channel:
+            if args.channel == ".":
+                channel = ctx.channel
+            elif args.channel == "*":
+                channel = None
+            else:
+                try:
+                    channel = await commands.TextChannelConverter().convert(ctx, args.channel or "")
+                except discord.DiscordException as e:
+                    return await ctx.send(f"{e.__class__.__name__}: {e}")
+        else:
+            channel = ctx.channel
+
+        await self.execute_post_raid_cleanup(
+            ctx=ctx,
+            channel=channel,
+            approx_msg_time=args.time,
+            approx_join_time=None,
+            user_count=args.count,
+            msg_content=args.content,
+            mention_count_threshold=args.mentions,
+            msg_contains_invite=args.invite,
+            clean_at_end=args.clean,
+            ban_at_end=args.ban,
+        )
+
+    @post_raid.command()
+    async def content(self, ctx, channel: discord.TextChannel, content: str, delete: bool = False):
+        """Shortcut to process a channel based on a message's content."""
+        if content.strip() == "":
+            return await ctx.send("Content cannot be blank! Remember to provide a channel and message content.")
+        await self.execute_post_raid_cleanup(
+            ctx=ctx,
+            channel=channel,
+            approx_msg_time=None,
+            approx_join_time=None,
+            user_count=None,
+            msg_content=content,
+            mention_count_threshold=None,
+            msg_contains_invite=False,
+            clean_at_end=delete,
+            ban_at_end=False
+        )
+
+    @post_raid.command()
+    async def mentions(self, ctx, channel: discord.TextChannel, mentions: int = 15, delete: bool = False):
+        """Shortcut to process a channel based on a message's mention count. Mention count threshold defaults to 15."""
+        await self.execute_post_raid_cleanup(
+            ctx=ctx,
+            channel=channel,
+            approx_msg_time=None,
+            approx_join_time=None,
+            user_count=None,
+            msg_content=None,
+            mention_count_threshold=mentions,
+            msg_contains_invite=False,
+            clean_at_end=delete,
+            ban_at_end=False
+        )
 
 
 def setup(bot):
