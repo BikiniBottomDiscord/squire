@@ -153,7 +153,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
 
     @commands.command()
-    async def raidcache(self, ctx):
+    async def raid_cache(self, ctx):
         """Display the contents of sQUIRE's raid cache."""
         await ctx.send(f"__RAID CACHE:__\n"
                        f"> cached_messages: {len(self.cached_messages)}\n"
@@ -385,15 +385,22 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         """Run a post-raid analysis, generating a list of user IDs. Outputs to a text file.
 
         Argument options:
-        --channel CHANNEL    The channel to check messages from. Defaults to current channel.
-                             '.' is shorthand for current channel, '*' is shorthand for "any channel".
-        --time TIME          Maximum message age. This will ignore messages older than the duration requested.
-        --count COUNT        Estimated user count. Currently does not affect this command's behavior.
-        --content CONTENT    Flag messages containing a particular substring.
-        --mentions MENTIONS  Flag messages containing MENTIONS or more mentions.
-        --invite             Bool, indicates that messages matching discord invite regex should be flagged.
-        --clean              Bool, indicates that flagged messages should be bulk deleted.
-        --ban                Bool, indicates that flagged users should be mass banned.
+        --channel CHANNEL
+            The channel to check messages from. Defaults to current channel. '.' is shorthand for current channel, '*' is shorthand for "any channel".
+        --time TIME
+            Maximum message age. This will ignore messages older than the duration requested.
+        --count COUNT
+            Estimated user count. Currently does not affect this command's behavior.
+        --content CONTENT
+            Flag messages containing a particular substring.
+        --mentions MENTIONS
+            Flag messages containing MENTIONS or more mentions.
+        --invite
+            Bool, indicates that messages matching discord invite regex should be flagged.
+        --clean
+            Bool, indicates that flagged messages should be bulk deleted.
+        --ban
+            Bool, indicates that flagged users should be mass banned.
         """
         parser = ArgumentParser()
         parser.add_argument('--channel')
