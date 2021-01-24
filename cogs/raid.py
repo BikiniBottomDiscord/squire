@@ -221,7 +221,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
     @commands.command()
     async def del_invite(self, ctx, invite_code):
         """Delete an invite."""
-        invites = await ctx.guild.invite()
+        invites = await ctx.guild.invites()
         for invite in invites:
             if invite.code == invite_code:
                 try:
@@ -327,10 +327,10 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                 if message.author.id in ignored_members:  # members who are safe
                     logger.debug("  member in ignored_members")
                     continue
-                # if any((role.id not in ROLES) for role in message.author.roles):  # if they have any roles not in this list, they're safe.
-                #     logger.debug("  member has roles not in ROLES")
-                #     ignored_members.add(message.author.id)
-                #     continue
+                if any((role.id not in ROLES) for role in message.author.roles):  # if they have any roles not in this list, they're safe.
+                    logger.debug("  member has roles not in ROLES")
+                    ignored_members.add(message.author.id)
+                    continue
                 if approx_join_time and (now - message.author.joined_at) > approx_join_time:  # ignore old users
                     logger.debug("  member is ignored due to account age")
                     ignored_members.add(message.author)
@@ -343,18 +343,19 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                 logger.debug("  checking message against flag criteria")
                 if mention_count_threshold:
                     if len(message.mentions) >= mention_count_threshold:
+                        logger.debug("    message flagged by mention_count_threshold")
                         flagged_messages.add(message)
                         flagged_members.add(message.author.id)
                         continue
-                    else:
-                        logger.debug(f"    message did not meet mention threshold ({len(message.mentions)=})")
                 if msg_contains_invite:
                     if invite_regex.search(message.content.lower()):
+                        logger.debug("    message flagged by msg_contains_invite")
                         flagged_messages.add(message)
                         flagged_members.add(message.author.id)
                         continue
                 if msg_content:
                     if msg_content in message.content.lower():
+                        logger.debug("    message flagged by msg_content")
                         flagged_messages.add(message)
                         flagged_members.add(message.author.id)
                         continue
