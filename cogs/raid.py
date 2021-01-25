@@ -165,7 +165,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
     async def raid_cache(self, ctx):
         """Display the contents of sQUIRE's raid cache."""
         await ctx.send(
-            f"__RAID CACHE:__\n"
+            f"__Raid Cache:__\n"
             f"> cached_messages: {len(self.cached_messages)}\n"
             f"> cached_joins: {len(self.cached_joins)}\n"
             f"> cached_invites: {len(self.cached_invites)}\n"
@@ -492,7 +492,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                 return await ctx.send(f"Invite with code {code} not found.")
 
             return await ctx.send(
-                f"__INVITE {invite.code}:__\n"
+                f"__Invite__: `{invite.code}`\n"
                 f"> inviter: {invite.inviter} ({invite.inviter.id})\n"
                 f"> created_at: {invite.created_at}\n"
                 f"> uses: {invite.uses}\n"
@@ -507,15 +507,15 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         for i in invites:
             if is_mod(i.inviter) and not i.inviter.bot:
                 inv_by_mods += 1
-            elif i.inviter.bot:
+            if i.inviter.bot:
                 inv_by_bots += 1
-            elif i.max_age == 0:
+            if i.max_age == 0:
                 inv_permanent += 1
-            elif i.uses == 0:
+            if i.uses == 0:
                 inv_unused += 1
 
         await ctx.send(
-            f"__SERVER INVITES__:\n"
+            f"__Server Invites__:\n"
             f"> total: {len(invites)}\n"
             f"> mods: {inv_by_mods}\n"
             f"> bots: {inv_by_bots}\n"
@@ -527,7 +527,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
     async def invites_by(self, ctx, who: Union[discord.Member, discord.User, FetchedUser]):
         """Returns a list of invites created by a user."""
         invites = await ctx.guild.invites()
-        content = f"__INVITES BY {who}__:\n"
+        content = f"__Invites by__: `{who}`\n"
 
         for i in invites:
             if i.inviter == who:
