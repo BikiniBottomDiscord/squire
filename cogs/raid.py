@@ -5,12 +5,13 @@ import discord
 import logging
 import re
 import io
-import typing
 
 from discord.ext import commands
 from discord.ext import tasks
+from typing import Union
 
-from utils.checks import is_admin
+from utils.checks import is_mod, is_admin
+from utils.converters import FetchedUser
 from utils.argparse_but_better import ArgumentParser
 
 logger = logging.getLogger('cogs.raid')
@@ -65,9 +66,7 @@ class TimeDelta(commands.Converter):
 
 
 class WARNING_EXPERIMENTAL(commands.Cog):
-    """
-    EXTREMELY experimental raid-processing code. Do not play with this cog please.
-    """
+    """EXTREMELY experimental raid-processing code. Do not play with this cog please."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -81,37 +80,10 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         self.last_invite_state = {}
         self.last_cache_update = None
 
-        self.clean_raid_cache.start()
+        self.clean_raid_cache_task.start()
 
     def cog_check(self, ctx):
         return is_admin(ctx.author)
-
-    @tasks.loop(minutes=5)
-    async def clean_raid_cache(self):
-        """
-        Runs every 5 minutes, clears cached items older than 10 minutes.
-        """
-        now = datetime.datetime.now()
-        age_threshold = datetime.timedelta(minutes=CACHE_REMOVE_AGE_THRESHOLD)
-        self.last_cache_update = now
-
-        # clear message cache
-        for message in list(self.cached_messages):
-            if now - message.created_at >= age_threshold:
-                self.cached_messages.remove(message)
-
-        # clear join cache
-        for member in list(self.cached_joins):
-            if now - member.joined_at >= age_threshold:
-                self.cached_joins.remove(member)
-
-        # clear invite cache
-        for code, join_list in list(self.cached_invites.items()):
-            for timestamp in list(join_list):
-                if now - timestamp >= age_threshold:
-                    join_list.remove(timestamp)
-            if len(join_list) == 0:
-                self.cached_invites.pop(code)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -151,88 +123,64 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
         self.last_invite_state = new_invite_state
 
+    @tasks.loop(minutes=5)
+    async def clean_raid_cache_task(self):
+        """Runs every 5 minutes, clears cached items older than 10 minutes."""
+        age_threshold = datetime.timedelta(minutes=CACHE_REMOVE_AGE_THRESHOLD)
+        await self.clean_raid_cache(age_threshold)
 
-    @commands.command()
+    async def clean_raid_cache(self, age_threshold):
+        now = datetime.datetime.now()
+        self.last_cache_update = now
+        n = 0
+
+        # clear message cache
+        for message in list(self.cached_messages):
+            if now - message.created_at >= age_threshold:
+                self.cached_messages.remove(message)
+                n += 1
+
+        # clear join cache
+        for member in list(self.cached_joins):
+            if now - member.joined_at >= age_threshold:
+                self.cached_joins.remove(member)
+                n += 1
+
+        # clear invite cache
+        for code, join_list in list(self.cached_invites.items()):
+            for timestamp in list(join_list):
+                if now - timestamp >= age_threshold:
+                    join_list.remove(timestamp)
+                    n += 1
+            if len(join_list) == 0:
+                self.cached_invites.pop(code)
+
+        return n
+
+    @commands.group(name='raid', invoke_without_command=True)
+    async def raid(self, ctx):
+        await ctx.send_help(self.raid)
+
+    @raid.group(name='cache', invoke_without_command=True)
     async def raid_cache(self, ctx):
         """Display the contents of sQUIRE's raid cache."""
-        await ctx.send(f"__RAID CACHE:__\n"
-                       f"> cached_messages: {len(self.cached_messages)}\n"
-                       f"> cached_joins: {len(self.cached_joins)}\n"
-                       f"> cached_invites: {len(self.cached_invites)}\n"
-                       f"cache last updated {self.last_cache_update}"
-                       )
+        await ctx.send(
+            f"__RAID CACHE:__\n"
+            f"> cached_messages: {len(self.cached_messages)}\n"
+            f"> cached_joins: {len(self.cached_joins)}\n"
+            f"> cached_invites: {len(self.cached_invites)}\n"
+            f"cache last updated {self.last_cache_update}"
+        )
 
-    async def execute_massban(self, ctx, users):
-        confirmation = await confirm_action(ctx, f"Are you sure you would like to ban {len(users)} users?")
+    @raid_cache.command(name='clear')
+    async def raid_cache_clear(self, ctx, age_limit: TimeDelta):
+        """Clear messages and invites older than age_limit from cache."""
+        await confirm_action(ctx, f"Are you sure you would like to clear items older than {age_limit}?")
+        n = await self.clean_raid_cache(age_limit)
+        await ctx.send(f"Cleared {n} items.")
 
-        if confirmation:
-            await ctx.send("Banning...")
-            success = 0
-            failed = 0
-            for user in users:
-                if isinstance(user, str):
-                    user = int(user)
-                if isinstance(user, int):
-                    user = discord.Object(user)
-                try:
-                    await ctx.guild.ban(user, reason=f'Mass ban by {ctx.author}')
-                    success += 1
-                except discord.DiscordException:
-                    failed += 1
-            await ctx.send(f"Done. {success} successes, {failed} failures.")
-
-        else:
-            await ctx.send("Cancelled!")
-
-    @commands.group(invoke_without_command=True)
-    async def mban(self, ctx, *users: typing.Union[discord.Member, discord.User, int]):
-        """Bans a list of users"""
-        await self.execute_massban(ctx, users)
-
-    @mban.command()
-    async def file(self, ctx):
-        """Mass bans users from a text file."""
-        try:
-            users = (await ctx.message.attachments[0].read()).decode().split()
-        except Exception as e:
-            return await ctx.send(f"Failed to read file: ```py\n{e.__class__.__name__}: {e}\n```")
-
-        await self.execute_massban(ctx, users)
-
-    @mban.command()
-    async def url(self, ctx, url):
-        """Mass bans from a pastebin URL. Must be the RAW text url."""
-        confirmation = await confirm_action(ctx, "Are you sure this is a valid URL? (Must be the **raw** text!)")
-
-        if confirmation:
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as resp:
-                        text = await resp.text()
-                        users = text.split()
-            except Exception as e:
-                return await ctx.send(f"Failed to read url: ```py\n{e.__class__.__name__}: {e}\n```")
-
-            await self.execute_massban(ctx, users)
-
-        else:
-            await ctx.send("Cancelled!")
-
-    @commands.command()
-    async def del_invite(self, ctx, invite_code):
-        """Delete an invite."""
-        invites = await ctx.guild.invites()
-        for invite in invites:
-            if invite.code == invite_code:
-                try:
-                    await invite.delete()
-                    return await ctx.send(f"Deleted invite {invite_code}!")
-                except Exception as e:
-                    return await ctx.send(f"Could not delete invite {invite_code}: ```py\n{e.__class__.__name__}: {e}\n```")
-        await ctx.send(f"Could not find invite {invite_code}.")
-
-    @commands.command()
-    async def analyze_joins(self, ctx):
+    @raid.command(name='check')
+    async def raid_check_invites(self, ctx):
         """Run some diagnostics on recent joins and return any notable information."""
         now = datetime.datetime.now()
         join_count = len(self.cached_joins)
@@ -282,7 +230,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
         await ctx.send(analysis)
 
-    async def execute_post_raid_cleanup(
+    async def execute_raid_cleanup(
             self, ctx: commands.Context,
             channel: discord.TextChannel,
             approx_msg_time: datetime.timedelta = None,
@@ -381,8 +329,8 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             await ctx.send("Mass banning is currently not implemented.")
             # await self.execute_massban(ctx, flagged_members)
 
-    @commands.group(invoke_without_command=True)
-    async def post_raid(self, ctx, *cmd_args):
+    @raid.group(name='cleanup', invoke_without_command=True)
+    async def raid_cleanup(self, ctx, *cmd_args):
         """Run a post-raid analysis, generating a list of user IDs. Outputs to a text file.
 
         Argument options:
@@ -428,7 +376,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         else:
             channel = ctx.channel
 
-        await self.execute_post_raid_cleanup(
+        await self.execute_raid_cleanup(
             ctx=ctx,
             channel=channel,
             approx_msg_time=args.time,
@@ -441,12 +389,12 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             ban_at_end=args.ban,
         )
 
-    @post_raid.command()
-    async def content(self, ctx, channel: discord.TextChannel, content: str, clean: bool = False):
+    @raid_cleanup.command()
+    async def raid_cleanup_content(self, ctx, channel: discord.TextChannel, content: str, clean: bool = False):
         """Shortcut to process a channel based on a message's content."""
         if content.strip() == "":
             return await ctx.send("Content cannot be blank! Remember to provide a channel and message content.")
-        await self.execute_post_raid_cleanup(
+        await self.execute_raid_cleanup(
             ctx=ctx,
             channel=channel,
             approx_msg_time=None,
@@ -459,10 +407,10 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             ban_at_end=False
         )
 
-    @post_raid.command()
-    async def mentions(self, ctx, channel: discord.TextChannel, mentions: int = 15, clean: bool = False):
+    @raid_cleanup.command()
+    async def raid_cleanup_mentions(self, ctx, channel: discord.TextChannel, mentions: int = 15, clean: bool = False):
         """Shortcut to process a channel based on a message's mention count. Mention count threshold defaults to 15."""
-        await self.execute_post_raid_cleanup(
+        await self.execute_raid_cleanup(
             ctx=ctx,
             channel=channel,
             approx_msg_time=None,
@@ -474,6 +422,139 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             clean_at_end=clean,
             ban_at_end=False
         )
+
+    async def execute_massban(self, ctx, users):
+        confirmation = await confirm_action(ctx, f"Are you sure you would like to ban {len(users)} users?")
+
+        if confirmation:
+            await ctx.send("Banning...")
+            success = 0
+            failed = 0
+            for user in users:
+                if isinstance(user, str):
+                    user = int(user)
+                if isinstance(user, int):
+                    user = discord.Object(user)
+                try:
+                    await ctx.guild.ban(user, reason=f'Mass ban by {ctx.author}')
+                    success += 1
+                except discord.DiscordException:
+                    failed += 1
+            await ctx.send(f"Done. {success} successes, {failed} failures.")
+
+        else:
+            await ctx.send("Cancelled!")
+
+    @commands.group(invoke_without_command=True)
+    async def mban(self, ctx, *users: Union[discord.Member, discord.User, int]):
+        """Bans a list of users"""
+        await self.execute_massban(ctx, users)
+
+    @mban.command(name='file')
+    async def mban_file(self, ctx):
+        """Mass bans users from a text file."""
+        try:
+            users = (await ctx.message.attachments[0].read()).decode().split()
+        except Exception as e:
+            return await ctx.send(f"Failed to read file: ```py\n{e.__class__.__name__}: {e}\n```")
+
+        await self.execute_massban(ctx, users)
+
+    @mban.command(name='url')
+    async def mban_url(self, ctx, url):
+        """Mass bans from a pastebin URL. Must be the RAW text url."""
+        confirmation = await confirm_action(ctx, "Are you sure this is a valid URL? (Must be the **raw** text!)")
+
+        if confirmation:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as resp:
+                        text = await resp.text()
+                        users = text.split()
+            except Exception as e:
+                return await ctx.send(f"Failed to read url: ```py\n{e.__class__.__name__}: {e}\n```")
+
+            await self.execute_massban(ctx, users)
+
+        else:
+            await ctx.send("Cancelled!")
+
+    @commands.group(name='invites', aliases=['invite'], invoke_without_command=True)
+    async def invites(self, ctx, code=None):
+        """Returns information on this server's invites, or on a single invite."""
+        invites = await ctx.guild.invites()
+
+        # if a code is provided, info about that invite
+        if code:
+            invite = discord.utils.get(invites, code=code)
+
+            if not invite:
+                return await ctx.send(f"Invite with code {code} not found.")
+
+            return await ctx.send(
+                f"__INVITE {invite.code}:__\n"
+                f"> inviter: {invite.inviter} ({invite.inviter.id})\n"
+                f"> created_at: {invite.created_at}\n"
+                f"> uses: {invite.uses}\n"
+            )
+
+        # if no code is provided, general server invite breakdown
+        inv_by_mods = 0
+        inv_by_bots = 0
+        inv_permanent = 0
+        inv_unused = 0
+
+        for i in invites:
+            if is_mod(i.inviter) and not i.inviter.bot:
+                inv_by_mods += 1
+            elif i.inviter.bot:
+                inv_by_bots += 1
+            elif i.max_age == 0:
+                inv_permanent += 1
+            elif i.uses == 0:
+                inv_unused += 1
+
+        await ctx.send(
+            f"__SERVER INVITES__:\n"
+            f"> total: {len(invites)}\n"
+            f"> mods: {inv_by_mods}\n"
+            f"> bots: {inv_by_bots}\n"
+            f"> permanent: {inv_permanent}\n"
+            f"> unused: {inv_unused}\n"
+        )
+
+    @invites.command(name='by')
+    async def invites_by(self, ctx, who: Union[discord.Member, discord.User, FetchedUser]):
+        """Returns a list of invites created by a user."""
+        invites = await ctx.guild.invites()
+        content = f"__INVITES BY {who}__:\n"
+
+        for i in invites:
+            if i.inviter == who:
+                content += f"> {i.code} ({i.uses})\n"
+
+        await ctx.send(content)
+
+    # @invites.command(name='created')
+    # async def invites_created_since(self, ctx, duration: TimeDelta):
+    #     pass
+    #
+    # @invites.command(name='used')
+    # async def invites_used_since(self, ctx, duration: TimeDelta):
+    #     pass
+
+    @invites.command(name='delete')
+    async def guild_invites_delete(self, ctx, invite_code):
+        """Delete an invite."""
+        invites = await ctx.guild.invites()
+        for invite in invites:
+            if invite.code == invite_code:
+                try:
+                    await invite.delete()
+                    return await ctx.send(f"Deleted invite {invite_code}!")
+                except Exception as e:
+                    return await ctx.send(f"Could not delete invite {invite_code}: ```py\n{e.__class__.__name__}: {e}\n```")
+        await ctx.send(f"Could not find invite {invite_code}.")
 
 
 def setup(bot):
