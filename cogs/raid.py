@@ -33,10 +33,11 @@ ROLES = [
     740457132662718524,  # game night
     541810707386335234,  # bad noodle
     681916546951806983,  # bad-ish noodle
+    384811165949231104,  # @everyone
 ]
 BAD_NOODLE = 541810707386335234
 
-CACHE_REMOVE_AGE_THRESHOLD = 20  # minutes
+CACHE_REMOVE_AGE_THRESHOLD = 30  # minutes
 
 
 async def confirm_action(ctx, prompt):
