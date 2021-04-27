@@ -275,5 +275,6 @@ class Modlog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Modlog(bot))
+    pass
+    #bot.add_cog(Modlog(bot))
 
