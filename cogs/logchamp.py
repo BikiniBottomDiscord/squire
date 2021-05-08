@@ -133,15 +133,15 @@ class LogChamp(Cog):
     @Cog.listener()
     async def on_member_join(self, member):
         content = f"{timestamp()} 📥 {member} (`{member.id}`) joined the server (created about {approximate_timedelta(datetime.now() - member.created_at)} ago)"
-        for channel_id, events in self._configs:
-            if 'member_join' in events:
+        for channel_id, config in self._configs:
+            if 'member_join' in config.events:
                 await self.send_log_message(channel_id, content)
 
     @Cog.listener()
     async def on_member_remove(self, member):
         content = f"{timestamp()} 📤 {member} (`{member.id}`) left the server (joined about {approximate_timedelta(datetime.now() - member.joined_at)} ago)"
-        for channel_id, events in self._configs:
-            if 'member_remove' in events:
+        for channel_id, config in self._configs:
+            if 'member_remove' in config.events:
                 await self.send_log_message(channel_id, content)
 
 
