@@ -105,8 +105,9 @@ class LogChamp(Cog):
 
         for channel_id in self._configs.keys():
 
-            @tasks.loop(seconds=0.5)
+            @tasks.loop(seconds=1)
             async def log_dispatch_loop():
+                print(f"loop started for {channel_id}")
                 await self.bot.wait_until_ready()
                 logs = []
 
@@ -118,9 +119,10 @@ class LogChamp(Cog):
                     except IndexError:
                         break
 
-                channel = self.bot.get_channel(channel_id)
-                n = await dispatch_logs(channel, *logs)
-                await asyncio.sleep(0.5*n)
+                if logs:
+                    channel = self.bot.get_channel(channel_id)
+                    n = await dispatch_logs(channel, *logs)
+                    await asyncio.sleep(0.5*n)
 
             loops.append(log_dispatch_loop)
             log_dispatch_loop.start()
