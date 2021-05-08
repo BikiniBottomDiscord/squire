@@ -78,11 +78,11 @@ class LogMessage:
 
 
 async def dispatch_logs(channel, *logs):
-    content = "\n".join(log for log in logs)
+    content = "\n".join(log.content for log in logs)
     files = [log.file for log in logs]
 
     await channel.send(
-        content, files=files,
+        content,
         allowed_mentions=discord.AllowedMentions.none())
 
     return len(logs)
@@ -128,22 +128,20 @@ class LogChamp(Cog):
 
         return loops
 
-    async def send_log_message(self, channel_id, content, file=None):
-        self._to_send[channel_id].append(LogMessage(content, file))
+    async def send_log_message(self, type, content, file=None):
+        for channel_id, config in self._configs.items():
+            if type in config.events:
+                self._to_send[channel_id].append(LogMessage(content, file))
 
     @Cog.listener()
     async def on_member_join(self, member):
-        content = f"{timestamp()} 📥 {member} (`{member.id}`) joined the server (created about {approximate_timedelta(datetime.now() - member.created_at)} ago)"
-        for channel_id, config in self._configs.items():
-            if 'member_join' in config.events:
-                await self.send_log_message(channel_id, content)
+        content = f"{timestamp()} 📥 {member} (`{member.id}`) joined the server (created about {approximate_timedelta(datetime.utcnow() - member.created_at)} ago)"
+        await self.send_log_message('member_join', content)
 
     @Cog.listener()
     async def on_member_remove(self, member):
-        content = f"{timestamp()} 📤 {member} (`{member.id}`) left the server (joined about {approximate_timedelta(datetime.now() - member.joined_at)} ago)"
-        for channel_id, config in self._configs.items():
-            if 'member_remove' in config.events:
-                await self.send_log_message(channel_id, content)
+        content = f"{timestamp()} 📤 {member} (`{member.id}`) left the server (joined about {approximate_timedelta(datetime.utcnow() - member.joined_at)} ago)"
+        await self.send_log_message('member_remove', content)
 
 
 def setup(bot):
