@@ -107,7 +107,6 @@ class LogChamp(Cog):
 
             @tasks.loop(seconds=1)
             async def log_dispatch_loop():
-                print(f"loop started for {channel_id}")
                 await self.bot.wait_until_ready()
                 logs = []
 
