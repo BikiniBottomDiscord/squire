@@ -9,7 +9,7 @@ from discord.ext.commands import Cog
 
 
 # CONFIG = 'src/neptuneshelper/config/logchamp.json'
-CONFIG = './logchamp.json'
+CONFIG_FILE = './logchamp.json'
 EVENTS = [
     'member_join',
 ]
@@ -52,23 +52,38 @@ def timestamp():
     return datetime.now().strftime("`[%H:%M:%S]`")
 
 
-class LogConfig:
-    def __init__(self, channel_id, events):
-        self.channel_id = channel_id
-        self.events = events
+def ago(t):
+    return approximate_timedelta(datetime.utcnow() - t)
 
-    @classmethod
-    def load(cls):
-        configs = {}
 
-        with open(CONFIG) as fp:
-            data = json.load(fp)
+def format_user(u):
+    if not u:
+        return None
+    if isinstance(u, dict):
+        return f"{u.get('username')}#{u.get('discriminator')} (`{u.get('id')}`)"
+    else:
+        return f"{u} (`{u.id}`)"
 
-        for channel_id, events in data.items():
-            i = int(channel_id)
-            configs[i] = cls(i, events)
 
-        return configs
+def load_config():
+    configs = defaultdict(list)
+    channels = []
+
+    with open(CONFIG_FILE) as fp:
+        data = json.load(fp)
+        guild = data['GUILD']
+        logs = data['LOGS']
+
+    for channel_id, events in logs.items():
+        i = int(channel_id)
+        channels.append(i)
+        for event in events:
+            configs[event].append(i)
+
+    return guild, channels, configs
+
+
+GUILD, CHANNELS, LOG_CONFIG = load_config()
 
 
 class LogMessage:
@@ -79,10 +94,10 @@ class LogMessage:
 
 async def dispatch_logs(channel, *logs):
     content = "\n".join(log.content for log in logs)
-    files = [log.file for log in logs]
+    files = [log.file for log in logs if log.file]
 
     await channel.send(
-        content,
+        content, files=files,
         allowed_mentions=discord.AllowedMentions.none())
 
     return len(logs)
@@ -93,7 +108,6 @@ class LogChamp(Cog):
     def __init__(self, bot):
         self.bot = bot
         self._to_send = defaultdict(deque)
-        self._configs = LogConfig.load()
         self._loops = self.start_dispatch_loops()
 
     def cog_unload(self):
@@ -103,7 +117,7 @@ class LogChamp(Cog):
     def start_dispatch_loops(self):
         loops = []
 
-        for channel_id in self._configs.keys():
+        for channel_id in CHANNELS:
 
             @tasks.loop(seconds=1)
             async def log_dispatch_loop():
@@ -129,19 +143,62 @@ class LogChamp(Cog):
         return loops
 
     async def send_log_message(self, type, content, file=None):
-        for channel_id, config in self._configs.items():
-            if type in config.events:
-                self._to_send[channel_id].append(LogMessage(content, file))
+        for channel_id in LOG_CONFIG[type]:
+            self._to_send[channel_id].append(LogMessage(content, file))
 
     @Cog.listener()
     async def on_member_join(self, member):
-        content = f"{timestamp()} 📥 {member} (`{member.id}`) joined the server (created about {approximate_timedelta(datetime.utcnow() - member.created_at)} ago)"
+        if member.guild.id != GUILD:
+            return
+        content = f"{timestamp()} 📥 {format_user(member)} joined the server (created about {ago(member.created_at)} ago)"
         await self.send_log_message('member_join', content)
 
     @Cog.listener()
     async def on_member_remove(self, member):
-        content = f"{timestamp()} 📤 {member} (`{member.id}`) left the server (joined about {approximate_timedelta(datetime.utcnow() - member.joined_at)} ago)"
+        if member.guild.id != GUILD:
+            return
+        content = f"{timestamp()} 📤 {format_user(member)} left the server (joined about {ago(member.joined_at)} ago)"
         await self.send_log_message('member_remove', content)
+
+    @Cog.listener()
+    async def on_raw_message_edit(self, payload):
+        if payload.guild_id != GUILD:
+            return
+        after = payload.data.get('content')
+        if payload.cached_message:
+            if payload.cached_message.content == after:
+                return
+            before = payload.cached_message.content
+            author = payload.cached_message.author
+        else:
+            before = None
+            author = payload.data.get('author')
+            author = self.bot.get_user(author) or author
+        cid = payload.channel_id
+        created_at = discord.utils.snowflake_time(payload.message_id)
+        content = f"{timestamp()} 📝 message by {format_user(author)} in <#{cid}> has been edited (sent about {ago(created_at)} ago)\n" \
+                  f"**Old**: {before}\n" \
+                  f"**New**: {after}"
+        await self.send_log_message('message_edit', content)
+
+    @Cog.listener()
+    async def on_raw_message_delete(self, payload):
+        if payload.guild_id != GUILD:
+            return
+        if payload.cached_message:
+            before_msg = payload.cached_message
+            before = payload.cached_message.content
+            author = payload.cached_message.author
+        else:
+            before_msg = before = author = None
+        cid = payload.channel_id
+        created_at = discord.utils.snowflake_time(payload.message_id)
+        content = f"{timestamp()} 🗑 message by {format_user(author)} in <#{cid}> has been deleted (sent about {ago(created_at)} ago)\n" \
+                  f"**Content**: {before}"
+        if before_msg and before_msg.attachments:
+            urls = ', '.join(a.url for a in before_msg.attachments)
+            content += f"\n({urls})"
+        await self.send_log_message('message_delete', content)
 
 
 def setup(bot):

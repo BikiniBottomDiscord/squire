@@ -1,3 +1,8 @@
 {
-  "798709470053400602": ["member_join", "member_remove"]
+  "GUILD": 384811165949231104,
+  "LOGS": {
+    "798709470053400602": ["member_join", "member_remove"],
+    "798708636154331146": ["message_edit", "message_delete"]
+  },
+  "MESSAGE_IGNORE": ["384814616259067904"]
 }
