@@ -1,13 +1,12 @@
 import os
 import random
 import traceback
-
 import discord
 
 from discord.ext import commands, tasks
 
 
-GUILD = 0
+GUILD = 384811165949231104
 IMG_DIR = './data/server-icons'
 PLAN_Z = 507429352720433152
 
