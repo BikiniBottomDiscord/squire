@@ -11,26 +11,12 @@ IMG_DIR = './data/server-icons'
 PLAN_Z = 507429352720433152
 
 
-def load_last_server_icon():
-    with open('./data/last-server-icon.txt') as fp:
-        return int(fp.read())
-
-
-def set_last_server_icon(i):
-    with open('./data/last-server-icon.txt', 'w') as fp:
-        fp.write(str(i))
-
-
 def find_file(i):
     images = os.listdir(IMG_DIR)
     for img_name in images:
         if img_name.startswith(str(i)):
             return f'{IMG_DIR}/{img_name}'
     return
-
-
-def get_server_icon(current):
-    return find_file(current + 1)
 
 
 def shuffle_server_icons():
@@ -46,7 +32,6 @@ class ServerIcon(commands.Cog):
     """Automatic server icon rotation."""
     def __init__(self, bot):
         self.bot = bot
-        self.last_server_icon = load_last_server_icon()
         # self.check_if_new_week.start()
 
     async def cog_command_error(self, ctx, error):
@@ -56,13 +41,11 @@ class ServerIcon(commands.Cog):
     async def rotate_server_icon(self):
         try:
             guild = self.bot.get_guild(GUILD)
-            last = self.last_server_icon
-            img_path = get_server_icon(last)
+            img = random.choice(os.listdir(IMG_DIR))
+            img_path = f"{IMG_DIR}/{img}"
             with open(img_path, 'rb') as fp:
                 icon = fp.read()
             await guild.edit(icon=icon)
-            self.last_server_icon += 1
-            set_last_server_icon(self.last_server_icon)
             await self.log(f"Set server icon to `{img_path}`.")
         except Exception as e:
             error = ''.join(traceback.format_exception(e.__class__, e, e.__traceback__))
@@ -79,9 +62,8 @@ class ServerIcon(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def icons(self, ctx):
         """Base command for controlling server icon."""
-        current = find_file(self.last_server_icon)
         count = len(os.listdir(IMG_DIR))
-        await ctx.send(f"Server icon is `{current}`. Found `{count} total images.`")
+        await ctx.send(f"Found `{count} total images.`")
 
     @icons.command()
     async def shuffle(self, ctx):
