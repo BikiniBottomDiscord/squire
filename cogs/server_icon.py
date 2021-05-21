@@ -73,10 +73,8 @@ class ServerIcon(commands.Cog):
     @icons.command()
     async def upload(self, ctx):
         """Add a new image to the icon folder."""
-        count = len(os.listdir(IMG_DIR))
         attachment = ctx.message.attachments[0]
-        ext = attachment.filename.split('.')[-1]
-        filename = f"{IMG_DIR}/{count}.{ext}"
+        filename = f"{IMG_DIR}/{attachment.filename}"
         await attachment.save(filename)
         await ctx.send(f"Saved as `{filename}`.")
 
