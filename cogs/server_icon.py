@@ -59,7 +59,7 @@ class ServerIcon(commands.Cog):
             guild = self.bot.get_guild(GUILD)
             last = self.last_server_icon
             img_path = get_server_icon(last)
-            with open(img_path) as fp:
+            with open(img_path, 'rb') as fp:
                 icon = fp.read()
             await guild.edit(icon=icon)
             self.last_server_icon += 1
