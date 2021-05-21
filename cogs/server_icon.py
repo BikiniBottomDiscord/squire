@@ -66,12 +66,6 @@ class ServerIcon(commands.Cog):
         await ctx.send(f"Found `{count} total images.`")
 
     @icons.command()
-    async def shuffle(self, ctx):
-        """Shuffle server icon names."""
-        shuffle_server_icons()
-        await ctx.send(f"Shuffled!```py\n{os.listdir(IMG_DIR)}```")
-
-    @icons.command()
     async def rotate(self, ctx):
         """Rotate to the next server icon."""
         await self.rotate_server_icon()
