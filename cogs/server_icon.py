@@ -62,8 +62,9 @@ class ServerIcon(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def icons(self, ctx):
         """Base command for controlling server icon."""
-        count = len(os.listdir(IMG_DIR))
-        await ctx.send(f"Found `{count} total images.`")
+        images = os.listdir(IMG_DIR)
+        count = len(images)
+        await ctx.send(f"Found `{count}` total images: ```py\n{images}\n```")
 
     @icons.command()
     async def rotate(self, ctx):
