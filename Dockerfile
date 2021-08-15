@@ -1,6 +1,7 @@
 FROM python:3.8-slim
 
 RUN mkdir /squire
+RUN mkdir /squire/logs
 
 WORKDIR /squire
 
