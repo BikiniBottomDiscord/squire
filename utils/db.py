@@ -1,11 +1,13 @@
 import asyncpg
 import logging
 from typing import Optional
+from os import environ
 
-from auth import POSTGRES_PASSWORD, IP
 from utils.parser import ARGS
 
 logger = logging.getLogger('utils.db')
+POSTGRES_PASSWORD = environ.get('POSTGRES_PASSWORD')
+IP = environ.get('IP')
 
 
 class Database:

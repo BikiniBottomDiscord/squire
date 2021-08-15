@@ -1,16 +1,15 @@
 import datetime
 import logging
-from argparse import ArgumentParser
+from os import environ
 
 from bot import Squire
-from auth import TOKEN
 from utils.utility import setup_logger
 from utils.parser import ARGS
 
 
 logger = logging.getLogger('launcher')
-
 started_at = datetime.datetime.now()
+TOKEN = environ.get('TOKEN')
 
 
 def main():
