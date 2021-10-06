@@ -10,6 +10,7 @@ from utils.checks import is_mod
 
 
 logger = logging.getLogger('bot')
+help_command = commands.MinimalHelpCommand()
 
 
 class Squire(commands.Bot):
@@ -17,8 +18,8 @@ class Squire(commands.Bot):
         super().__init__(
             command_prefix=settings.prefix,
             description="sQUIRE, Defender of Bikini Bottom",
-            help_command=commands.MinimalHelpCommand(),
-            intents=discord.Intents.all(),
+            help_command=help_command,
+            intents=settings.intents,
             **kwargs
         )
         self.version = settings.version

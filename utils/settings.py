@@ -1,5 +1,6 @@
+import discord
 
-version = '2.1.2'
+version = '2.1.3'
 prefix = '=='
 
 ADMINS = {
@@ -24,3 +25,28 @@ MODS = {
     299023554127593473,  # mzone#1771
     298497141490450432,  # AdventurousSwine#9894
 }
+
+intents = discord.Intents(
+    # most stuff still enabled
+    guilds=True,
+    members=True,
+    bans=True,
+    emojis=True,
+    integrations=True,
+    webhooks=True,
+    invites=True,
+    voice_states=True,
+
+    # presences is bad
+    presences=False,
+
+    # enable guild stuff
+    guild_messages=True,
+    guild_reactions=True,
+    guild_typing=True,
+    
+    # disable DM stuff
+    dm_messages=False,
+    dm_reactions=False,
+    dm_typing=False
+)
