@@ -3,3 +3,4 @@ discord.py
 jishaku
 aiopg
 asyncpg
+psutil
