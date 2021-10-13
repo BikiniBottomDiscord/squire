@@ -1,5 +1,6 @@
 import discord
 import random
+import socket
 
 from discord.ext import commands
 
@@ -24,7 +25,7 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def test(self, ctx):
-        whereami = 'Windows' if ARGS.dev else 'HostPls'
+        whereami = 'Windows' if ARGS.dev else socket.gethostname()
         if random.randint(0, 1):
             await ctx.guild.me.edit(nick="Ol' Reliable")
             await ctx.send(f"Whoosh whoosh, on {whereami}! <:bluejellyfish:479723952265232396> v{settings.version}")

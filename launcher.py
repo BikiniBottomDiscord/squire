@@ -22,8 +22,6 @@ def main():
     setup_logger('cogs', debug, started_at)
     setup_logger('utils', debug, started_at)
 
-    logger.info(f"{TOKEN=}")
-
     logger.info(f"Initializing bot.")
     bot = Squire(started_at)
 
