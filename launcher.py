@@ -16,6 +16,8 @@ def main():
 
     debug = ARGS.debug
 
+    logger.info(f"{TOKEN=}")
+
     setup_logger('discord', False, started_at)
     setup_logger('launcher', debug, started_at)
     setup_logger('bot', debug, started_at)
