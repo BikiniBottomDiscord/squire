@@ -1,6 +1,6 @@
 import discord
 
-version = '2.1.3'
+version = '2.2.0'
 prefix = '=='
 
 ADMINS = {
