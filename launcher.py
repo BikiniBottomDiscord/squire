@@ -16,13 +16,13 @@ def main():
 
     debug = ARGS.debug
 
-    logger.info(f"{TOKEN=}")
-
     setup_logger('discord', False, started_at)
     setup_logger('launcher', debug, started_at)
     setup_logger('bot', debug, started_at)
     setup_logger('cogs', debug, started_at)
     setup_logger('utils', debug, started_at)
+
+    logger.info(f"{TOKEN=}")
 
     logger.info(f"Initializing bot.")
     bot = Squire(started_at)
