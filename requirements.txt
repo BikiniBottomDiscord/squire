@@ -4,3 +4,4 @@ jishaku~=1.20
 aiopg
 asyncpg
 psutil
+youtube-dl
