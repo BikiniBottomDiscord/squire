@@ -1,6 +1,6 @@
 aiohttp
-discord.py
-jishaku
+discord.py[voice]~=1.7
+jishaku~=1.20
 aiopg
 asyncpg
 psutil
