@@ -1,5 +1,5 @@
 aiohttp
-git+git://github.com/nwunderly/discord.py
+git+git://github.com/nwunderly/discord.py@feature/timeout
 jishaku~=1.20
 aiopg
 asyncpg
