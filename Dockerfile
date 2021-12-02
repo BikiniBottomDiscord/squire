@@ -5,7 +5,8 @@ RUN mkdir /squire/logs
 
 WORKDIR /squire
 
-RUN apt-get update && apt-get install libopus0 opus-tools libffi-dev libnacl-dev python3-dev -y
+#RUN apt-get update && apt-get install -y libopus0 opus-tools libffi-dev libnacl-dev python3-dev
+RUN apt-get update && apt-get install -y git
 
 COPY requirements.txt requirements.txt
 
