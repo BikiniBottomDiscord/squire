@@ -80,13 +80,12 @@ class Timeout(commands.Cog):
         member = after
         guild = member.guild
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
 
         # timeout added
         if after.timeout and not before.timeout:
             logger.info(f"timeout added for {member}")
             entry = await self.fetch_audit_log_entry(guild, AuditLogAction.member_update, member)
-            logger.info(entry, entry.before, entry.after)
             await self.log_timeout_create(
                 member,
                 entry.user,
@@ -99,10 +98,8 @@ class Timeout(commands.Cog):
             logger.info(f"timeout removed for {member}")
             entry = await self.fetch_audit_log_entry(guild, AuditLogAction.member_update, member)
             if entry:
-                logger.info(entry, entry.before, entry.after)
                 await self.log_timeout_cancel(member, entry.user)
             else:
-                logger.info("no entry found")
                 await self.log_timeout_expire(member)
 
 
