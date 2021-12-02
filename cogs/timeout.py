@@ -43,7 +43,7 @@ def approximate_timedelta(dt):
 class Timeout(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.last_audit_id = None
+        self.audit_id_cache = set()
 
     async def log_timeout_create(self, user, mod, ends_at, reason):
         duration = approximate_timedelta(ends_at - datetime.datetime.now())
@@ -70,9 +70,9 @@ class Timeout(commands.Cog):
     async def fetch_audit_log_entry(self, guild, action_type, target):
         async for entry in guild.audit_logs(limit=5):
             if entry.action == action_type and entry.target == target:
-                if entry.id == self.last_audit_id:
+                if entry.id in self.audit_id_cache:
                     return
-                self.last_audit_id = entry.id
+                self.audit_id_cache.add(entry.id)
                 return entry
 
     @commands.Cog.listener()
@@ -86,6 +86,8 @@ class Timeout(commands.Cog):
         if after.timeout and not before.timeout:
             logger.info(f"timeout added for {member}")
             entry = await self.fetch_audit_log_entry(guild, AuditLogAction.member_update, member)
+            if not entry:
+                logger.info("no audit log entry found")
             await self.log_timeout_create(
                 member,
                 entry.user,
