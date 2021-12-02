@@ -10,7 +10,7 @@ from discord.ext import commands
 logger = logging.getLogger('cogs.modlog')
 
 # log_channel = 713467871040241744
-log_channel = 507429352720433152 # plan z
+log_channel = 507429352720433152  # plan z
 
 TIMEOUT_START = '👶'
 TIMEOUT_END = '🤑'
@@ -53,7 +53,7 @@ class Timeout(commands.Cog):
             f"**User:** {user} (`{user.id}`)\n"
             f"**Duration:** {duration}\n"
             f"**Moderator:** {mod}\n"
-            f"**Reason**: {reason.strip()}"
+            f"**Reason**: {reason.strip() if reason else None}"
         )
 
     async def log_timeout_cancel(self, user, mod):
@@ -88,9 +88,9 @@ class Timeout(commands.Cog):
             entry = await self.fetch_audit_log_entry(guild, AuditLogAction.member_update, member)
             await self.log_timeout_create(
                 member,
-                entry.user,
+                entry.user if entry else None,
                 after.communication_disabled_until,
-                entry.reason
+                entry.reason if entry else None
             )
 
         # timeout removed
