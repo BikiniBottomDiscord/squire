@@ -56,7 +56,7 @@ class Timeout(commands.Cog):
             f"**Reason**: {reason.strip()}"
         )
 
-    async def log_timeout_cancel(self, user):  # , mod):
+    async def log_timeout_cancel(self, user, mod):
         await self.bot.get_channel(log_channel).send(
             f"{TIMEOUT_END} **MEMBER TIMEOUT CANCELED**\n"
             f"**User:** {user} (`{user.id}`)\n"
