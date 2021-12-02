@@ -1,7 +1,17 @@
 import discord
 
-version = '2.2.0'
+version = '2.3.0'
 prefix = '=='
+
+COGS = [
+    'jishaku',
+    'cogs.admin',
+    'cogs.misc',
+    'cogs.raid',
+    'cogs.rdanny',
+    'cogs.timeout',
+    # 'cogs.logchamp',
+]
 
 ADMINS = {
     204414611578028034,  # rev
