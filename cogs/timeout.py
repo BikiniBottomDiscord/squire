@@ -2,7 +2,8 @@ import asyncio
 import datetime
 import logging
 
-from discord import AuditLogAction, AuditLogEntry
+from discord import AuditLogAction
+from discord.utils import parse_time
 from discord.ext import commands
 
 
@@ -46,7 +47,7 @@ class Timeout(commands.Cog):
         self.audit_id_cache = set()
 
     async def log_timeout_create(self, user, mod, ends_at, reason):
-        duration = approximate_timedelta(ends_at - datetime.datetime.now())
+        duration = approximate_timedelta(parse_time(ends_at) - datetime.datetime.now())
         await self.bot.get_channel(log_channel).send(
             f"{TIMEOUT_START} **MEMBER TIMED OUT**\n"
             f"**User:** {user} (`{user.id}`)\n"
@@ -68,6 +69,7 @@ class Timeout(commands.Cog):
         )
 
     async def fetch_audit_log_entry(self, guild, action_type, target):
+        await asyncio.sleep(5)
         async for entry in guild.audit_logs(limit=5):
             if entry.action == action_type and entry.target == target:
                 if entry.id in self.audit_id_cache:
@@ -79,8 +81,6 @@ class Timeout(commands.Cog):
     async def on_member_update(self, before, after):
         member = after
         guild = member.guild
-
-        await asyncio.sleep(5)
 
         # timeout added
         if after.timeout and not before.timeout:
