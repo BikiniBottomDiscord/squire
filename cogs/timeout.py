@@ -56,7 +56,7 @@ class Timeout(commands.Cog):
             f"**Reason**: {reason.strip()}"
         )
 
-    async def log_timeout_cancel(self, user, mod):
+    async def log_timeout_cancel(self, user):  # , mod):
         await self.bot.get_channel(log_channel).send(
             f"{TIMEOUT_END} **MEMBER TIMEOUT CANCELED**\n"
             f"**User:** {user} (`{user.id}`)\n"
@@ -86,12 +86,10 @@ class Timeout(commands.Cog):
         if after.timeout and not before.timeout:
             logger.info(f"timeout added for {member}")
             entry = await self.fetch_audit_log_entry(guild, AuditLogAction.member_update, member)
-            if not entry:
-                logger.info("no audit log entry found")
             await self.log_timeout_create(
                 member,
                 entry.user,
-                entry.after.communication_disabled_until,
+                after.communication_disabled_until,
                 entry.reason
             )
 
