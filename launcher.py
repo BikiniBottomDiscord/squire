@@ -3,24 +3,23 @@ import logging
 from os import environ
 
 from bot import Squire
-from utils.utility import setup_logger
 from utils.parser import ARGS
+from utils.utility import setup_logger
 
-
-logger = logging.getLogger('launcher')
+logger = logging.getLogger("launcher")
 started_at = datetime.datetime.now()
-TOKEN = environ.get('TOKEN')
+TOKEN = environ.get("TOKEN")
 
 
 def main():
 
     debug = ARGS.debug
 
-    setup_logger('discord', False, started_at)
-    setup_logger('launcher', debug, started_at)
-    setup_logger('bot', debug, started_at)
-    setup_logger('cogs', debug, started_at)
-    setup_logger('utils', debug, started_at)
+    setup_logger("discord", False, started_at)
+    setup_logger("launcher", debug, started_at)
+    setup_logger("bot", debug, started_at)
+    setup_logger("cogs", debug, started_at)
+    setup_logger("utils", debug, started_at)
 
     logger.info(f"Initializing bot.")
     bot = Squire(started_at)

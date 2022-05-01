@@ -1,16 +1,15 @@
-import discord
-import json
 import asyncio
+import json
 import logging
 import typing
 
+import discord
 from discord.ext import commands
 
-from utils import checks
-from utils import db
+from utils import checks, db
 from utils.converters import FetchedUser
 
-logger = logging.getLogger('cogs.modlog')
+logger = logging.getLogger("cogs.modlog")
 
 
 EMOJI_MUTE = "<:hoopla:718369341162258482>"
@@ -38,56 +37,80 @@ class Modlog(commands.Cog):
             logger.info("Connected to database.")
 
     async def log_mute(self, moderator, member, reason):
-        infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'mute', reason)
-        content = f"{EMOJI_MUTE} **MEMBER MUTED (#{infraction_id})**\n" \
-                  f"**User:** {member} (`{member.id}`)\n" \
-                  f"**Moderator:** {moderator}\n" \
-                  f"**Reason:** {reason}"
+        infraction_id = await self.db.new_infraction(
+            str(moderator.id), str(member.id), "mute", reason
+        )
+        content = (
+            f"{EMOJI_MUTE} **MEMBER MUTED (#{infraction_id})**\n"
+            f"**User:** {member} (`{member.id}`)\n"
+            f"**Moderator:** {moderator}\n"
+            f"**Reason:** {reason}"
+        )
         message = await self.bot.get_channel(self.logging_channel).send(content)
         await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_kick(self, moderator, member, reason):
-        infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'kick', reason)
-        content = f"{EMOJI_KICK} **MEMBER KICKED (#{infraction_id})**\n" \
-                  f"**User:** {member} (`{member.id}`)\n" \
-                  f"**Moderator:** {moderator}\n" \
-                  f"**Reason:** {reason}"
+        infraction_id = await self.db.new_infraction(
+            str(moderator.id), str(member.id), "kick", reason
+        )
+        content = (
+            f"{EMOJI_KICK} **MEMBER KICKED (#{infraction_id})**\n"
+            f"**User:** {member} (`{member.id}`)\n"
+            f"**Moderator:** {moderator}\n"
+            f"**Reason:** {reason}"
+        )
         message = await self.bot.get_channel(self.logging_channel).send(content)
         await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_ban(self, moderator, member, reason):
-        infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'ban', reason)
-        content = f"{EMOJI_BAN} **MEMBER BANNED (#{infraction_id})**\n" \
-                  f"**User:** {member} (`{member.id}`)\n" \
-                  f"**Moderator:** {moderator}\n" \
-                  f"**Reason:** {reason}"
+        infraction_id = await self.db.new_infraction(
+            str(moderator.id), str(member.id), "ban", reason
+        )
+        content = (
+            f"{EMOJI_BAN} **MEMBER BANNED (#{infraction_id})**\n"
+            f"**User:** {member} (`{member.id}`)\n"
+            f"**Moderator:** {moderator}\n"
+            f"**Reason:** {reason}"
+        )
         message = await self.bot.get_channel(self.logging_channel).send(content)
         await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_forceban(self, moderator, user, reason):
-        infraction_id = await self.db.new_infraction(str(moderator.id), str(user.id), 'ban', reason)
-        content = f"{EMOJI_BAN} **USER FORCEBANNED (#{infraction_id})**\n" \
-                  f"**User:** {user} (`{user.id}`)\n" \
-                  f"**Moderator:** {moderator}\n" \
-                  f"**Reason:** {reason}"
+        infraction_id = await self.db.new_infraction(
+            str(moderator.id), str(user.id), "ban", reason
+        )
+        content = (
+            f"{EMOJI_BAN} **USER FORCEBANNED (#{infraction_id})**\n"
+            f"**User:** {user} (`{user.id}`)\n"
+            f"**Moderator:** {moderator}\n"
+            f"**Reason:** {reason}"
+        )
         message = await self.bot.get_channel(self.logging_channel).send(content)
         await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_unmute(self, moderator, member, reason):
-        infraction_id = await self.db.new_infraction(str(moderator.id), str(member.id), 'unmute', reason)
-        content = f"{EMOJI_UNMUTE} **MEMBER UNMUTED (#{infraction_id})**\n" \
-                  f"**User:** {member} (`{member.id}`)\n" \
-                  f"**Moderator:** {moderator}\n" \
-                  f"**Reason:** {reason}"
+        infraction_id = await self.db.new_infraction(
+            str(moderator.id), str(member.id), "unmute", reason
+        )
+        content = (
+            f"{EMOJI_UNMUTE} **MEMBER UNMUTED (#{infraction_id})**\n"
+            f"**User:** {member} (`{member.id}`)\n"
+            f"**Moderator:** {moderator}\n"
+            f"**Reason:** {reason}"
+        )
         message = await self.bot.get_channel(self.logging_channel).send(content)
         await self.db.set_message_id(infraction_id, str(message.id))
 
     async def log_unban(self, moderator, user, reason):
-        infraction_id = await self.db.new_infraction(str(moderator.id), str(user.id), 'unban', reason)
-        content = f"{EMOJI_UNBAN} **USER UNBANNED (#{infraction_id})**\n" \
-                  f"**User:** {user} (`{user.id}`)\n" \
-                  f"**Moderator:** {moderator}\n" \
-                  f"**Reason:** {reason}"
+        infraction_id = await self.db.new_infraction(
+            str(moderator.id), str(user.id), "unban", reason
+        )
+        content = (
+            f"{EMOJI_UNBAN} **USER UNBANNED (#{infraction_id})**\n"
+            f"**User:** {user} (`{user.id}`)\n"
+            f"**Moderator:** {moderator}\n"
+            f"**Reason:** {reason}"
+        )
         message = await self.bot.get_channel(self.logging_channel).send(content)
         await self.db.set_message_id(infraction_id, str(message.id))
 
@@ -161,7 +184,11 @@ class Modlog(commands.Cog):
         if bad_noodle in before.roles and bad_noodle not in after.roles:  # unmute
             logger.debug("detected unmute")
             async for entry in guild.audit_logs(limit=5):
-                if entry.action == discord.AuditLogAction.member_role_update and bad_noodle in entry.before.roles and bad_noodle not in entry.after.roles:
+                if (
+                    entry.action == discord.AuditLogAction.member_role_update
+                    and bad_noodle in entry.before.roles
+                    and bad_noodle not in entry.after.roles
+                ):
                     if entry.id == self.last_audit_id:
                         return
                     self.last_audit_id = entry.id
@@ -174,7 +201,11 @@ class Modlog(commands.Cog):
         elif bad_noodle in after.roles and bad_noodle not in before.roles:  # mute
             logger.debug("detected mute")
             async for entry in guild.audit_logs(limit=5):
-                if entry.action == discord.AuditLogAction.member_role_update and bad_noodle in entry.after.roles and bad_noodle not in entry.before.roles:
+                if (
+                    entry.action == discord.AuditLogAction.member_role_update
+                    and bad_noodle in entry.after.roles
+                    and bad_noodle not in entry.before.roles
+                ):
                     if entry.id == self.last_audit_id:
                         return
                     self.last_audit_id = entry.id
@@ -204,17 +235,19 @@ class Modlog(commands.Cog):
 
         await self.log_unban(moderator, user, reason)
 
-    @commands.group(name='case', aliases=['inf'], invoke_without_command=True)
+    @commands.group(name="case", aliases=["inf"], invoke_without_command=True)
     @checks.lifeguard()
     async def infraction(self, ctx, infraction_id: int):
         """Base command for modlog. Passing an int will return the link to the message associated with a particular infraction."""
         try:
             infraction = await self.db.get_infraction(infraction_id)
-            message_id = infraction['message_id']
-            message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
+            message_id = infraction["message_id"]
+            message = await self.bot.get_channel(self.logging_channel).fetch_message(
+                message_id
+            )
         except Exception as e:
             logger.exception(e)
-            return await ctx.send(f'{e.__class__.__name__}: {e}')
+            return await ctx.send(f"{e.__class__.__name__}: {e}")
         await ctx.send(message.jump_url)
 
     @infraction.command()
@@ -223,11 +256,13 @@ class Modlog(commands.Cog):
         """View the logged message for an infraction."""
         try:
             infraction = await self.db.get_infraction(infraction_id)
-            message_id = infraction['message_id']
-            message = await self.bot.get_channel(self.logging_channel).fetch_message(message_id)
+            message_id = infraction["message_id"]
+            message = await self.bot.get_channel(self.logging_channel).fetch_message(
+                message_id
+            )
         except Exception as e:
             logger.exception(e)
-            return await ctx.send(f'{e.__class__.__name__}: {e}')
+            return await ctx.send(f"{e.__class__.__name__}: {e}")
         await ctx.send(message.content)
 
     @infraction.command()
@@ -238,18 +273,20 @@ class Modlog(commands.Cog):
             infraction = await self.db.get_infraction(infraction_id)
         except Exception as e:
             logger.exception(e)
-            return await ctx.send(f'{e.__class__.__name__}: {e}')
+            return await ctx.send(f"{e.__class__.__name__}: {e}")
         await ctx.send("```py\n" + str(dict(infraction)) + "\n```")
 
     @infraction.command()
     @checks.lifeguard()
-    async def list(self, ctx, user: typing.Union[discord.Member, discord.User, FetchedUser]):
+    async def list(
+        self, ctx, user: typing.Union[discord.Member, discord.User, FetchedUser]
+    ):
         """View a user's infraction history."""
         try:
             infractions = await self.db.get_history(str(user.id))
         except Exception as e:
             logger.exception(e)
-            return await ctx.send(f'{e.__class__.__name__}: {e}')
+            return await ctx.send(f"{e.__class__.__name__}: {e}")
         await ctx.send("```py\n" + str(dict(infractions)) + "\n```")
 
     @infraction.command()
@@ -258,13 +295,15 @@ class Modlog(commands.Cog):
         """Edit the reason for an infraction."""
         try:
             infraction = await self.db.set_reason(infraction_id, new_reason)
-            message = await self.bot.get_channel(self.logging_channel).fetch_message(infraction['message_id'])
-            content = '\n'.join(message.content.split('\n')[:-1])
+            message = await self.bot.get_channel(self.logging_channel).fetch_message(
+                infraction["message_id"]
+            )
+            content = "\n".join(message.content.split("\n")[:-1])
             content += f"\n**Reason:** {new_reason} (edited by {ctx.author})"
             await message.edit(content=content)
         except Exception as e:
             logger.exception(e)
-            return await ctx.send(f'{e.__class__.__name__}: {e}')
+            return await ctx.send(f"{e.__class__.__name__}: {e}")
         await ctx.send(message.jump_url)
 
     # @infraction.command()

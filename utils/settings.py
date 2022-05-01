@@ -1,15 +1,15 @@
 import discord
 
-version = '2.3.0'
-prefix = '=='
+version = "2.3.0"
+prefix = "=="
 
 COGS = [
-    'jishaku',
-    'cogs.admin',
-    'cogs.misc',
-    'cogs.raid',
-    'cogs.rdanny',
-    'cogs.timeout',
+    "jishaku",
+    "cogs.admin",
+    "cogs.misc",
+    "cogs.raid",
+    "cogs.rdanny",
+    "cogs.timeout",
     # 'cogs.logchamp',
 ]
 
@@ -46,17 +46,14 @@ intents = discord.Intents(
     webhooks=True,
     invites=True,
     voice_states=True,
-
     # presences is bad
     presences=False,
-
     # enable guild stuff
     guild_messages=True,
     guild_reactions=True,
     guild_typing=True,
-    
     # disable DM stuff
     dm_messages=False,
     dm_reactions=False,
-    dm_typing=False
+    dm_typing=False,
 )

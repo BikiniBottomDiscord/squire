@@ -3,29 +3,28 @@ import datetime
 import logging
 
 from discord import AuditLogAction
-from discord.utils import parse_time
 from discord.ext import commands
+from discord.utils import parse_time
 
-
-logger = logging.getLogger('cogs.modlog')
+logger = logging.getLogger("cogs.modlog")
 
 # log_channel = 713467871040241744
 log_channel = 507429352720433152  # plan z
 
-TIMEOUT_START = '👶'
-TIMEOUT_END = '🤑'
+TIMEOUT_START = "👶"
+TIMEOUT_END = "🤑"
 
 SECOND = 1
-MINUTE = SECOND*60
-HOUR = MINUTE*60
-DAY = HOUR*24
-WEEK = DAY*7
+MINUTE = SECOND * 60
+HOUR = MINUTE * 60
+DAY = HOUR * 24
+WEEK = DAY * 7
 
 
 def approximate_timedelta(dt):
     if isinstance(dt, datetime.timedelta):
         dt = dt.total_seconds()
-    s = lambda n: 's' if n != 1 else ''
+    s = lambda n: "s" if n != 1 else ""
     if dt >= WEEK:
         t = f"{int(_w := dt // WEEK)} week" + s(_w)
     elif dt >= DAY:
@@ -38,7 +37,6 @@ def approximate_timedelta(dt):
         t = f"{int(_s := dt // SECOND)} second" + s(_s)
 
     return t
-
 
 
 class Timeout(commands.Cog):
@@ -85,18 +83,22 @@ class Timeout(commands.Cog):
         # timeout added
         if after.timeout and not before.timeout:
             logger.info(f"timeout added for {member}")
-            entry = await self.fetch_audit_log_entry(guild, AuditLogAction.member_update, member)
+            entry = await self.fetch_audit_log_entry(
+                guild, AuditLogAction.member_update, member
+            )
             await self.log_timeout_create(
                 member,
                 entry.user if entry else None,
                 after.communication_disabled_until,
-                entry.reason if entry else None
+                entry.reason if entry else None,
             )
 
         # timeout removed
         elif before.timeout and not after.timeout:
             logger.info(f"timeout removed for {member}")
-            entry = await self.fetch_audit_log_entry(guild, AuditLogAction.member_update, member)
+            entry = await self.fetch_audit_log_entry(
+                guild, AuditLogAction.member_update, member
+            )
             if entry:
                 await self.log_timeout_cancel(member, entry.user)
             else:

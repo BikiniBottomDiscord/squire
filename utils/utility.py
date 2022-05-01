@@ -1,23 +1,22 @@
-import discord
-from discord.ext import commands
-
 import logging
 import sys
 
+import discord
+from discord.ext import commands
 
-logger = logging.getLogger('utils.utility')
+logger = logging.getLogger("utils.utility")
 
 
-red_tick = '<:redTick:699377558361341952>'
-green_tick = '<:greenTick:699377495178346546>'
-gray_tick = '<:GreyTick:652202011965521950>'
-yellow_tick = '⚠'
+red_tick = "<:redTick:699377558361341952>"
+green_tick = "<:greenTick:699377495178346546>"
+gray_tick = "<:GreyTick:652202011965521950>"
+yellow_tick = "⚠"
 status = {
-    'online': '<:status_online:699642822378258547>',
-    'idle': '<:status_idle:699642825087647784>',
-    'dnd': '<:status_dnd:699642826585145397>',
-    'offline': '<:status_offline:699642828309004420>',
-    'streaming': '<:status_streaming:699642830842363984>'
+    "online": "<:status_online:699642822378258547>",
+    "idle": "<:status_idle:699642825087647784>",
+    "dnd": "<:status_dnd:699642826585145397>",
+    "offline": "<:status_offline:699642828309004420>",
+    "streaming": "<:status_streaming:699642830842363984>",
 }
 
 
@@ -35,8 +34,7 @@ def setup_logger(name, debug, dt):
     logger = logging.getLogger(name)
     time = f"{dt.month}-{dt.day}_{dt.hour}h{dt.minute}m"
 
-
-    filename = 'logs/{}.log'
+    filename = "logs/{}.log"
     if debug:
         level = logging.DEBUG
     else:
@@ -48,7 +46,9 @@ def setup_logger(name, debug, dt):
     stream_handler = logging.StreamHandler(sys.stdout)
     # stream_handler.setLevel(level)
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     file_handler.setFormatter(formatter)
     stream_handler.setFormatter(formatter)
 
@@ -66,5 +66,3 @@ async def fetch_previous_message(message):
         if m.id == message.id:
             use_next = True
     return None
-
-

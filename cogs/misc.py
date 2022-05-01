@@ -1,7 +1,7 @@
-import discord
 import random
 import socket
 
+import discord
 from discord.ext import commands
 
 from utils import settings
@@ -26,13 +26,21 @@ class Misc(commands.Cog):
     @commands.command()
     async def test(self, ctx):
         hostname = socket.gethostname()
-        whereami = 'Windows' if ARGS.dev else ('Kubernetes' if 'squire' in hostname else hostname)
+        whereami = (
+            "Windows"
+            if ARGS.dev
+            else ("Kubernetes" if "squire" in hostname else hostname)
+        )
         if random.randint(0, 1):
             await ctx.guild.me.edit(nick="Ol' Reliable")
-            await ctx.send(f"Whoosh whoosh, on {whereami}! <:bluejellyfish:479723952265232396> v{settings.version}")
+            await ctx.send(
+                f"Whoosh whoosh, on {whereami}! <:bluejellyfish:479723952265232396> v{settings.version}"
+            )
         else:
             await ctx.guild.me.edit(nick="Jellyfish")
-            await ctx.send(f"Buzz Buzz, on {whereami}! <:jellyfish:479723952890052608> v{settings.version}")
+            await ctx.send(
+                f"Buzz Buzz, on {whereami}! <:jellyfish:479723952890052608> v{settings.version}"
+            )
         await ctx.guild.me.edit(nick=None)
 
 
