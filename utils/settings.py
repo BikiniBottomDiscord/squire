@@ -56,4 +56,6 @@ intents = disnake.Intents(
     dm_messages=False,
     dm_reactions=False,
     dm_typing=False,
+    # fuck message content
+    message_content=True,
 )
