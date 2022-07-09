@@ -1,8 +1,8 @@
 import random
 import socket
 
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 from utils import settings
 from utils.parser import ARGS
@@ -17,7 +17,7 @@ class Misc(commands.Cog):
         await ctx.send(ctx.guild.member_count)
 
     @commands.command()
-    async def joinpos(self, ctx, member: discord.Member = None):
+    async def joinpos(self, ctx, member: disnake.Member = None):
         member = member if member else ctx.author
         order = sorted(ctx.guild.members, key=lambda m: m.joined_at)
         join_pos = order.index(member) + 1

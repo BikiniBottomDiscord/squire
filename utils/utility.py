@@ -1,8 +1,8 @@
 import logging
 import sys
 
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 logger = logging.getLogger("utils.utility")
 

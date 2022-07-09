@@ -5,8 +5,8 @@ import re
 import zlib
 
 import aiohttp
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 logger = logging.getLogger("cogs.rdanny")
 
@@ -81,7 +81,7 @@ class RDanny(commands.Cog):
 
     def parse_object_inv(self, stream, url):
         # key: URL
-        # n.b.: key doesn't have `discord` or `discord.ext.commands` namespaces
+        # n.b.: key doesn't have `discord` or `disnake.ext.commands` namespaces
         result = {}
 
         # first line is version info
@@ -128,7 +128,7 @@ class RDanny(commands.Cog):
             prefix = f"{subdirective}:" if domain == "std" else ""
 
             if projname == "discord.py":
-                key = key.replace("discord.ext.commands.", "").replace("discord.", "")
+                key = key.replace("disnake.ext.commands.", "").replace("discord.", "")
 
             result[f"{prefix}{key}"] = os.path.join(url, location)
 
@@ -170,7 +170,7 @@ class RDanny(commands.Cog):
         if key.startswith("latest"):
             # point the abc.Messageable types properly:
             q = obj.lower()
-            for name in dir(discord.abc.Messageable):
+            for name in dir(disnake.abc.Messageable):
                 if name[0] == "_":
                     continue
                 if q == name:
@@ -184,7 +184,7 @@ class RDanny(commands.Cog):
 
         matches = finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
 
-        e = discord.Embed(colour=discord.Colour.blurple())
+        e = disnake.Embed(colour=disnake.Colour.blurple())
         if len(matches) == 0:
             return await ctx.send("Could not find anything. Sorry.")
 

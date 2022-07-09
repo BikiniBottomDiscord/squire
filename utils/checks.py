@@ -1,6 +1,6 @@
 import logging
 
-from discord.ext import commands
+from disnake.ext import commands
 
 from utils.settings import ADMINS, MODS
 

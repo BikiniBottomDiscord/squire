@@ -6,8 +6,8 @@ import re
 from typing import Union
 
 import aiohttp
-import discord
-from discord.ext import commands, tasks
+import disnake
+from disnake.ext import commands, tasks
 
 from utils.argparse_but_better import ArgumentParser
 from utils.checks import is_admin, is_mod
@@ -211,7 +211,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                         minutes=30
                     ):
                         analysis += f"Invite `{code}` was created about `{round((now - invite.created_at).seconds / 60)}` minutes ago and used {uses} times\n"
-                    if isinstance(inviter, discord.Member):
+                    if isinstance(inviter, disnake.Member):
                         if (
                             invite.created_at - inviter.joined_at
                         ) <= datetime.timedelta(minutes=30) and (
@@ -257,7 +257,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
     async def execute_raid_cleanup(
         self,
         ctx: commands.Context,
-        channel: discord.TextChannel,
+        channel: disnake.TextChannel,
         approx_msg_time: datetime.timedelta = None,
         approx_join_time: datetime.timedelta = None,
         user_count: int = None,
@@ -354,7 +354,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         fp = io.StringIO(text)
         await ctx.send(
             f"Flagged {len(flagged_members)} users.",
-            file=discord.File(fp, "FLAGGED_USERS.txt"),
+            file=disnake.File(fp, "FLAGGED_USERS.txt"),
         )
 
         if clean_at_end:
@@ -410,7 +410,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                     channel = await commands.TextChannelConverter().convert(
                         ctx, args.channel or ""
                     )
-                except discord.DiscordException as e:
+                except disnake.DiscordException as e:
                     return await ctx.send(f"{e.__class__.__name__}: {e}")
         else:
             channel = ctx.channel
@@ -430,7 +430,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     @raid_cleanup.command()
     async def raid_cleanup_content(
-        self, ctx, channel: discord.TextChannel, content: str, clean: bool = False
+        self, ctx, channel: disnake.TextChannel, content: str, clean: bool = False
     ):
         """Shortcut to process a channel based on a message's content."""
         if content.strip() == "":
@@ -452,7 +452,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     @raid_cleanup.command()
     async def raid_cleanup_mentions(
-        self, ctx, channel: discord.TextChannel, mentions: int = 15, clean: bool = False
+        self, ctx, channel: disnake.TextChannel, mentions: int = 15, clean: bool = False
     ):
         """Shortcut to process a channel based on a message's mention count. Mention count threshold defaults to 15."""
         await self.execute_raid_cleanup(
@@ -481,11 +481,11 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                 if isinstance(user, str):
                     user = int(user)
                 if isinstance(user, int):
-                    user = discord.Object(user)
+                    user = disnake.Object(user)
                 try:
                     await ctx.guild.ban(user, reason=f"Mass ban by {ctx.author}")
                     success += 1
-                except discord.DiscordException:
+                except disnake.DiscordException:
                     failed += 1
             await ctx.send(f"Done. {success} successes, {failed} failures.")
 
@@ -493,7 +493,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             await ctx.send("Cancelled!")
 
     @commands.group(invoke_without_command=True)
-    async def mban(self, ctx, *users: Union[discord.Member, discord.User, int]):
+    async def mban(self, ctx, *users: Union[disnake.Member, disnake.User, int]):
         """Bans a list of users"""
         await self.execute_massban(ctx, users)
 
@@ -539,7 +539,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
         # if a code is provided, info about that invite
         if code:
-            invite = discord.utils.get(invites, code=code)
+            invite = disnake.utils.get(invites, code=code)
 
             if not invite:
                 return await ctx.send(f"Invite with code {code} not found.")
@@ -578,7 +578,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     @invites.command(name="by")
     async def invites_by(
-        self, ctx, who: Union[discord.Member, discord.User, FetchedUser]
+        self, ctx, who: Union[disnake.Member, disnake.User, FetchedUser]
     ):
         """Returns a list of invites created by a user."""
         invites = await ctx.guild.invites()

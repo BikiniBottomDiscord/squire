@@ -2,8 +2,8 @@ import logging
 import os
 
 import aiohttp
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 from utils import settings
 from utils.checks import is_mod

@@ -3,8 +3,8 @@ import json
 import logging
 import typing
 
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 from utils import checks, db
 from utils.converters import FetchedUser
@@ -127,13 +127,13 @@ class Modlog(commands.Cog):
         await asyncio.sleep(2)
 
         async for entry in guild.audit_logs(limit=5):
-            if entry.action == discord.AuditLogAction.ban and entry.target == user:
+            if entry.action == disnake.AuditLogAction.ban and entry.target == user:
                 logger.debug("audit log entry found")
                 moderator = entry.user
                 reason = entry.reason
                 break
 
-        if isinstance(user, discord.User):  # forceban
+        if isinstance(user, disnake.User):  # forceban
             logger.debug("it's a forceban")
             await self.log_forceban(moderator, user, reason)
         else:  # regular ban
@@ -153,12 +153,12 @@ class Modlog(commands.Cog):
         await asyncio.sleep(2)
 
         async for entry in guild.audit_logs(limit=5):
-            if entry.action == discord.AuditLogAction.kick and entry.target == member:
+            if entry.action == disnake.AuditLogAction.kick and entry.target == member:
                 logger.debug("audit log entry found, it's a kick. logging")
                 moderator = entry.user
                 reason = entry.reason
                 break
-            elif entry.action == discord.AuditLogAction.ban and entry.target == member:
+            elif entry.action == disnake.AuditLogAction.ban and entry.target == member:
                 logger.debug("audit log entry found, it's a ban. ignoring")
                 return
 
@@ -185,7 +185,7 @@ class Modlog(commands.Cog):
             logger.debug("detected unmute")
             async for entry in guild.audit_logs(limit=5):
                 if (
-                    entry.action == discord.AuditLogAction.member_role_update
+                    entry.action == disnake.AuditLogAction.member_role_update
                     and bad_noodle in entry.before.roles
                     and bad_noodle not in entry.after.roles
                 ):
@@ -202,7 +202,7 @@ class Modlog(commands.Cog):
             logger.debug("detected mute")
             async for entry in guild.audit_logs(limit=5):
                 if (
-                    entry.action == discord.AuditLogAction.member_role_update
+                    entry.action == disnake.AuditLogAction.member_role_update
                     and bad_noodle in entry.after.roles
                     and bad_noodle not in entry.before.roles
                 ):
@@ -227,7 +227,7 @@ class Modlog(commands.Cog):
         await asyncio.sleep(2)
 
         async for entry in guild.audit_logs(limit=5):
-            if entry.action == discord.AuditLogAction.unban and entry.target == user:
+            if entry.action == disnake.AuditLogAction.unban and entry.target == user:
                 logger.debug("audit log entry found")
                 moderator = entry.user
                 reason = entry.reason
@@ -279,7 +279,7 @@ class Modlog(commands.Cog):
     @infraction.command()
     @checks.lifeguard()
     async def list(
-        self, ctx, user: typing.Union[discord.Member, discord.User, FetchedUser]
+        self, ctx, user: typing.Union[disnake.Member, disnake.User, FetchedUser]
     ):
         """View a user's infraction history."""
         try:

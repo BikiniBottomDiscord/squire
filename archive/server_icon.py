@@ -2,8 +2,8 @@ import os
 import random
 import traceback
 
-import discord
-from discord.ext import commands, tasks
+import disnake
+from disnake.ext import commands, tasks
 
 GUILD = 384811165949231104
 IMG_DIR = "./data/server-icons"

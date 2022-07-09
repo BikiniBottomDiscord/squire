@@ -1,4 +1,4 @@
-import discord
+import disnake
 
 version = "2.3.0"
 prefix = "=="
@@ -36,7 +36,7 @@ MODS = {
     298497141490450432,  # AdventurousSwine#9894
 }
 
-intents = discord.Intents(
+intents = disnake.Intents(
     # most stuff still enabled
     guilds=True,
     members=True,

@@ -8,8 +8,8 @@ import textwrap
 import traceback
 from contextlib import redirect_stdout
 
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 from utils import checks
 
@@ -191,9 +191,9 @@ class Admin(commands.Cog):
                         await ctx.send("Content too big to be printed.")
                     else:
                         await ctx.send(fmt)
-            except discord.Forbidden:
+            except disnake.Forbidden:
                 pass
-            except discord.HTTPException as e:
+            except disnake.HTTPException as e:
                 await ctx.send(f"Unexpected error: `{e}`")
 
 
