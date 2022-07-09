@@ -9,7 +9,7 @@ COGS = [
     "cogs.misc",
     "cogs.raid",
     "cogs.rdanny",
-    "cogs.timeout",
+    # "cogs.timeout",
     # 'cogs.logchamp',
 ]
 

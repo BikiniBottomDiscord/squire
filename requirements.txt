@@ -1,6 +1,6 @@
 aiohttp
-git+git://github.com/nwunderly/discord.py@feature/timeout
-jishaku~=1.20
+disnake~=2.5
+disnake-jishaku~=2.6
 aiopg
 asyncpg
 psutil
