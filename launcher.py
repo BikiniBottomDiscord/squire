@@ -8,8 +8,9 @@ from utils.utility import setup_logger
 
 logger = logging.getLogger("launcher")
 started_at = datetime.datetime.now()
-TOKEN = environ.get("TOKEN")
 
+# TOKEN = environ.get("TOKEN")
+from auth import TOKEN
 
 def main():
 
