@@ -29,7 +29,7 @@ class Misc(commands.Cog):
         whereami = (
             "Windows"
             if ARGS.dev
-            else ("Kubernetes" if "squire" in hostname else hostname)
+            else ("Kubernetes" if "squire" in hostname else "Docker")
         )
         if random.randint(0, 1):
             await ctx.guild.me.edit(nick="Ol' Reliable")
