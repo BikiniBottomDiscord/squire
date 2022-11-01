@@ -6,7 +6,6 @@ import sys
 
 
 class ArgumentParser(argparse.ArgumentParser):
-
     class Range(object):
         def __init__(self, start, end):
             self.start = start
@@ -24,7 +23,7 @@ class ArgumentParser(argparse.ArgumentParser):
         if name is None:
             return None
         for action in container:
-            if '/'.join(action.option_strings) == name:
+            if "/".join(action.option_strings) == name:
                 return action
             elif action.metavar == name:
                 return action

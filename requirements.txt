@@ -1,5 +1,7 @@
 aiohttp
-discord.py
-jishaku
+disnake~=2.5
+disnake-jishaku~=2.6
 aiopg
 asyncpg
+psutil
+youtube-dl

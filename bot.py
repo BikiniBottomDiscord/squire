@@ -1,15 +1,15 @@
-import os
-import discord
 import logging
-import aiohttp
+import os
 
-from discord.ext import commands
+import aiohttp
+import disnake
+from disnake.ext import commands
 
 from utils import settings
 from utils.checks import is_mod
 
-
-logger = logging.getLogger('bot')
+logger = logging.getLogger("bot")
+help_command = commands.MinimalHelpCommand()
 
 
 class Squire(commands.Bot):
@@ -17,9 +17,9 @@ class Squire(commands.Bot):
         super().__init__(
             command_prefix=settings.prefix,
             description="sQUIRE, Defender of Bikini Bottom",
-            help_command=commands.MinimalHelpCommand(),
-            intents=discord.Intents.all(),
-            **kwargs
+            help_command=help_command,
+            intents=settings.intents,
+            **kwargs,
         )
         self.version = settings.version
         self.started_at = started_at
@@ -39,19 +39,18 @@ class Squire(commands.Bot):
             await self.process_commands(message)
 
     def load_cogs(self):
-        logger.info('Loading cogs.')
-        cogs = ['jishaku'] + [f"cogs.{file[:-3]}" for file in os.listdir('./cogs') if file.endswith('.py')]
-        for cog in cogs:
+        logger.info("Loading cogs.")
+        for cog in settings.COGS:
             try:
                 self.load_extension(cog)
-                logger.info(f' - {cog}')
+                logger.info(f" - {cog}")
             except commands.ExtensionFailed as e:
-                logger.exception(f"Failed to load cog {cog} [{e.__class__.__name__}: {e}]")
-        logger.info('Cogs loaded.')
+                logger.exception(
+                    f"Failed to load cog {cog} [{e.__class__.__name__}: {e}]"
+                )
+        logger.info("Cogs loaded.")
 
     async def close(self):
         await self.session.close()
         del self.session
         await super().close()
-
-

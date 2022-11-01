@@ -1,20 +1,19 @@
-import aiohttp
 import asyncio
 import datetime
-import discord
+import io
 import logging
 import re
-import io
-
-from discord.ext import commands
-from discord.ext import tasks
 from typing import Union
 
-from utils.checks import is_mod, is_admin
-from utils.converters import FetchedUser
-from utils.argparse_but_better import ArgumentParser
+import aiohttp
+import disnake
+from disnake.ext import commands, tasks
 
-logger = logging.getLogger('cogs.raid')
+from utils.argparse_but_better import ArgumentParser
+from utils.checks import is_admin, is_mod
+from utils.converters import FetchedUser
+
+logger = logging.getLogger("cogs.raid")
 
 
 BIKINI_BOTTOM = 384811165949231104
@@ -46,8 +45,8 @@ async def confirm_action(ctx, prompt):
     def check(_msg):
         return _msg.author == ctx.author
 
-    message = await ctx.bot.wait_for('message', check=check)
-    return message.content.lower() in ['y', 'yes']
+    message = await ctx.bot.wait_for("message", check=check)
+    return message.content.lower() in ["y", "yes"]
 
 
 class TimeDelta(commands.Converter):
@@ -56,9 +55,9 @@ class TimeDelta(commands.Converter):
         if match:
             count = match.group(1)
             unit = match.group(2)
-            if unit == 's':
+            if unit == "s":
                 return datetime.timedelta(seconds=int(count))
-            elif unit == 'm':
+            elif unit == "m":
                 return datetime.timedelta(minutes=int(count))
         raise commands.BadArgument
 
@@ -71,9 +70,9 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.cached_messages = []   # stores last 10 min of message events
-        self.cached_joins = []      # stores last 10 min of join events
-        self.cached_invites = {}    # recently used invites (map to amount of times used)
+        self.cached_messages = []  # stores last 10 min of message events
+        self.cached_joins = []  # stores last 10 min of join events
+        self.cached_invites = {}  # recently used invites (map to amount of times used)
 
         # TODO: maybe also add:
         # self.cached_authors = []    # recently active members
@@ -90,7 +89,9 @@ class WARNING_EXPERIMENTAL(commands.Cog):
     async def on_ready(self):
         # setup invite state (for invite tracking)
         guild = self.bot.get_guild(BIKINI_BOTTOM)
-        self.last_invite_state = dict([(invite.code, invite.uses) for invite in await guild.invites()])
+        self.last_invite_state = dict(
+            [(invite.code, invite.uses) for invite in await guild.invites()]
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -109,11 +110,15 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         await asyncio.sleep(2)
 
         if not self.last_invite_state:
-            self.last_invite_state = dict([(invite.code, invite.uses) for invite in await member.guild.invites()])
+            self.last_invite_state = dict(
+                [(invite.code, invite.uses) for invite in await member.guild.invites()]
+            )
             return
 
         # update invite cache
-        new_invite_state = dict([(invite.code, invite.uses) for invite in await member.guild.invites()])
+        new_invite_state = dict(
+            [(invite.code, invite.uses) for invite in await member.guild.invites()]
+        )
         for code, uses in new_invite_state.items():
             old_uses = self.last_invite_state.get(code, 0)
             if old_uses < uses:
@@ -158,11 +163,11 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
         return n
 
-    @commands.group(name='raid', invoke_without_command=True)
+    @commands.group(name="raid", invoke_without_command=True)
     async def raid(self, ctx):
         await ctx.send_help(self.raid)
 
-    @raid.group(name='cache', invoke_without_command=True)
+    @raid.group(name="cache", invoke_without_command=True)
     async def raid_cache(self, ctx):
         """Display the contents of sQUIRE's raid cache."""
         await ctx.send(
@@ -173,20 +178,24 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             f"cache last updated {self.last_cache_update}"
         )
 
-    @raid_cache.command(name='clear')
+    @raid_cache.command(name="clear")
     async def raid_cache_clear(self, ctx, age_limit: TimeDelta):
         """Clear messages and invites older than age_limit from cache."""
-        await confirm_action(ctx, f"Are you sure you would like to clear items older than {age_limit}?")
+        await confirm_action(
+            ctx, f"Are you sure you would like to clear items older than {age_limit}?"
+        )
         n = await self.clean_raid_cache(age_limit)
         await ctx.send(f"Cleared {n} items.")
 
-    @raid.command(name='check')
+    @raid.command(name="check")
     async def raid_check_invites(self, ctx):
         """Run some diagnostics on recent joins and return any notable information."""
         now = datetime.datetime.now()
         join_count = len(self.cached_joins)
         invite_count = len(self.cached_invites)
-        analysis = f"`{join_count}` members joined recently, using `{invite_count}` invites.\n"
+        analysis = (
+            f"`{join_count}` members joined recently, using `{invite_count}` invites.\n"
+        )
 
         guild_invites = await ctx.guild.invites()
 
@@ -198,10 +207,18 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                     uses = invite.uses
                     if joins > 1 and joins >= (join_count / 2):
                         analysis += f"`{joins}` members joined using invite `{code}` (created by {inviter.mention}, `{uses}` total uses)\n"
-                    if joins > 1 and (now - invite.created_at) <= datetime.timedelta(minutes=30):
+                    if joins > 1 and (now - invite.created_at) <= datetime.timedelta(
+                        minutes=30
+                    ):
                         analysis += f"Invite `{code}` was created about `{round((now - invite.created_at).seconds / 60)}` minutes ago and used {uses} times\n"
-                    if isinstance(inviter, discord.Member):
-                        if (invite.created_at - inviter.joined_at) <= datetime.timedelta(minutes=30) and (now - inviter.joined_at) <= datetime.timedelta(minutes=60):
+                    if isinstance(inviter, disnake.Member):
+                        if (
+                            invite.created_at - inviter.joined_at
+                        ) <= datetime.timedelta(minutes=30) and (
+                            now - inviter.joined_at
+                        ) <= datetime.timedelta(
+                            minutes=60
+                        ):
                             analysis += f"New user {inviter.mention} created invite `{code}` about `{round((invite.created_at - inviter.joined_at).seconds / 60)}` minutes after joining\n"
 
                     max_joins_within_duration_limit = 0
@@ -209,7 +226,11 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                     duration_range = None
                     for a, first_timestamp in enumerate(join_list):
                         for b, last_timestamp in enumerate(join_list):
-                            if a >= b or (duration_range and a >= duration_range[0] and b <= duration_range[1]):
+                            if a >= b or (
+                                duration_range
+                                and a >= duration_range[0]
+                                and b <= duration_range[1]
+                            ):
                                 continue
                             if last_timestamp - first_timestamp < duration_limit:
                                 count = b - a + 1  # it's an inclusive range
@@ -217,7 +238,9 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                                     max_joins_within_duration_limit = count
                                     duration_range = (a, b)
                     if max_joins_within_duration_limit:
-                        duration = join_list[duration_range[1]] - join_list[duration_range[0]]
+                        duration = (
+                            join_list[duration_range[1]] - join_list[duration_range[0]]
+                        )
                         minutes = round(duration.seconds / 60)
                         if max_joins_within_duration_limit > minutes:
                             analysis += f"`{max_joins_within_duration_limit}` members joined using invite `{code}` in `{minutes}` minutes"
@@ -232,16 +255,17 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         await ctx.send(analysis)
 
     async def execute_raid_cleanup(
-            self, ctx: commands.Context,
-            channel: discord.TextChannel,
-            approx_msg_time: datetime.timedelta = None,
-            approx_join_time: datetime.timedelta = None,
-            user_count: int = None,
-            msg_content: str = None,
-            mention_count_threshold: int = None,
-            msg_contains_invite: bool = False,
-            clean_at_end: bool = False,
-            ban_at_end: bool = False
+        self,
+        ctx: commands.Context,
+        channel: disnake.TextChannel,
+        approx_msg_time: datetime.timedelta = None,
+        approx_join_time: datetime.timedelta = None,
+        user_count: int = None,
+        msg_content: str = None,
+        mention_count_threshold: int = None,
+        msg_contains_invite: bool = False,
+        clean_at_end: bool = False,
+        ban_at_end: bool = False,
     ):
         """Runs an analysis on message cache and returns a list of flagged users."""
 
@@ -270,21 +294,30 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         for message in self.cached_messages.copy():
             if not channel or message.channel == channel:
 
-                logger.debug(f"checking message {message.id} by user {message.author.id}")
+                logger.debug(
+                    f"checking message {message.id} by user {message.author.id}"
+                )
 
                 # check reasons to ignore a user/message
                 if message.author.id in ignored_members:  # members who are safe
                     logger.debug("  member in ignored_members")
                     continue
-                if any((role.id not in ROLES) for role in message.author.roles):  # if they have any roles not in this list, they're safe.
+                if any(
+                    (role.id not in ROLES) for role in message.author.roles
+                ):  # if they have any roles not in this list, they're safe.
                     logger.debug("  member has roles not in ROLES")
                     ignored_members.add(message.author.id)
                     continue
-                if approx_join_time and (now - message.author.joined_at) > approx_join_time:  # ignore old users
+                if (
+                    approx_join_time
+                    and (now - message.author.joined_at) > approx_join_time
+                ):  # ignore old users
                     logger.debug("  member is ignored due to account age")
                     ignored_members.add(message.author)
                     continue
-                if approx_msg_time and (now - message.created_at) > approx_msg_time:  # ignore old messages
+                if (
+                    approx_msg_time and (now - message.created_at) > approx_msg_time
+                ):  # ignore old messages
                     logger.debug("  message is ignored due to message age")
                     continue
 
@@ -319,7 +352,10 @@ class WARNING_EXPERIMENTAL(commands.Cog):
 
         text = "\n".join([str(i) for i in flagged_members])
         fp = io.StringIO(text)
-        await ctx.send(f"Flagged {len(flagged_members)} users.", file=discord.File(fp, "FLAGGED_USERS.txt"))
+        await ctx.send(
+            f"Flagged {len(flagged_members)} users.",
+            file=disnake.File(fp, "FLAGGED_USERS.txt"),
+        )
 
         if clean_at_end:
             # TODO
@@ -330,7 +366,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             await ctx.send("Mass banning is currently not implemented.")
             # await self.execute_massban(ctx, flagged_members)
 
-    @raid.group(name='cleanup', invoke_without_command=True)
+    @raid.group(name="cleanup", invoke_without_command=True)
     async def raid_cleanup(self, ctx, *cmd_args):
         """Run a post-raid analysis, generating a list of user IDs. Outputs to a text file.
 
@@ -353,15 +389,15 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             Bool, indicates that flagged users should be mass banned.
         """
         parser = ArgumentParser()
-        parser.add_argument('--channel')
-        parser.add_argument('--time', type=TimeDelta().convert_to_time)
-        parser.add_argument('--count', type=int)
-        parser.add_argument('--content')
-        parser.add_argument('--mentions', type=int)
-        parser.add_argument('--invite', action='store_true')
+        parser.add_argument("--channel")
+        parser.add_argument("--time", type=TimeDelta().convert_to_time)
+        parser.add_argument("--count", type=int)
+        parser.add_argument("--content")
+        parser.add_argument("--mentions", type=int)
+        parser.add_argument("--invite", action="store_true")
         # parser.add_argument('--regex', type=lambda arg: re.compile(arg.strip('`')))
-        parser.add_argument('--clean', action='store_true')
-        parser.add_argument('--ban', action='store_true')
+        parser.add_argument("--clean", action="store_true")
+        parser.add_argument("--ban", action="store_true")
         args = parser.parse_args(cmd_args)
 
         if args.channel:
@@ -371,8 +407,10 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                 channel = None
             else:
                 try:
-                    channel = await commands.TextChannelConverter().convert(ctx, args.channel or "")
-                except discord.DiscordException as e:
+                    channel = await commands.TextChannelConverter().convert(
+                        ctx, args.channel or ""
+                    )
+                except disnake.DiscordException as e:
                     return await ctx.send(f"{e.__class__.__name__}: {e}")
         else:
             channel = ctx.channel
@@ -391,10 +429,14 @@ class WARNING_EXPERIMENTAL(commands.Cog):
         )
 
     @raid_cleanup.command()
-    async def raid_cleanup_content(self, ctx, channel: discord.TextChannel, content: str, clean: bool = False):
+    async def raid_cleanup_content(
+        self, ctx, channel: disnake.TextChannel, content: str, clean: bool = False
+    ):
         """Shortcut to process a channel based on a message's content."""
         if content.strip() == "":
-            return await ctx.send("Content cannot be blank! Remember to provide a channel and message content.")
+            return await ctx.send(
+                "Content cannot be blank! Remember to provide a channel and message content."
+            )
         await self.execute_raid_cleanup(
             ctx=ctx,
             channel=channel,
@@ -405,11 +447,13 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             mention_count_threshold=None,
             msg_contains_invite=False,
             clean_at_end=clean,
-            ban_at_end=False
+            ban_at_end=False,
         )
 
     @raid_cleanup.command()
-    async def raid_cleanup_mentions(self, ctx, channel: discord.TextChannel, mentions: int = 15, clean: bool = False):
+    async def raid_cleanup_mentions(
+        self, ctx, channel: disnake.TextChannel, mentions: int = 15, clean: bool = False
+    ):
         """Shortcut to process a channel based on a message's mention count. Mention count threshold defaults to 15."""
         await self.execute_raid_cleanup(
             ctx=ctx,
@@ -421,11 +465,13 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             mention_count_threshold=mentions,
             msg_contains_invite=False,
             clean_at_end=clean,
-            ban_at_end=False
+            ban_at_end=False,
         )
 
     async def execute_massban(self, ctx, users):
-        confirmation = await confirm_action(ctx, f"Are you sure you would like to ban {len(users)} users?")
+        confirmation = await confirm_action(
+            ctx, f"Are you sure you would like to ban {len(users)} users?"
+        )
 
         if confirmation:
             await ctx.send("Banning...")
@@ -435,11 +481,11 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                 if isinstance(user, str):
                     user = int(user)
                 if isinstance(user, int):
-                    user = discord.Object(user)
+                    user = disnake.Object(user)
                 try:
-                    await ctx.guild.ban(user, reason=f'Mass ban by {ctx.author}')
+                    await ctx.guild.ban(user, reason=f"Mass ban by {ctx.author}")
                     success += 1
-                except discord.DiscordException:
+                except disnake.DiscordException:
                     failed += 1
             await ctx.send(f"Done. {success} successes, {failed} failures.")
 
@@ -447,24 +493,28 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             await ctx.send("Cancelled!")
 
     @commands.group(invoke_without_command=True)
-    async def mban(self, ctx, *users: Union[discord.Member, discord.User, int]):
+    async def mban(self, ctx, *users: Union[disnake.Member, disnake.User, int]):
         """Bans a list of users"""
         await self.execute_massban(ctx, users)
 
-    @mban.command(name='file')
+    @mban.command(name="file")
     async def mban_file(self, ctx):
         """Mass bans users from a text file."""
         try:
             users = (await ctx.message.attachments[0].read()).decode().split()
         except Exception as e:
-            return await ctx.send(f"Failed to read file: ```py\n{e.__class__.__name__}: {e}\n```")
+            return await ctx.send(
+                f"Failed to read file: ```py\n{e.__class__.__name__}: {e}\n```"
+            )
 
         await self.execute_massban(ctx, users)
 
-    @mban.command(name='url')
+    @mban.command(name="url")
     async def mban_url(self, ctx, url):
         """Mass bans from a pastebin URL. Must be the RAW text url."""
-        confirmation = await confirm_action(ctx, "Are you sure this is a valid URL? (Must be the **raw** text!)")
+        confirmation = await confirm_action(
+            ctx, "Are you sure this is a valid URL? (Must be the **raw** text!)"
+        )
 
         if confirmation:
             try:
@@ -473,21 +523,23 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                         text = await resp.text()
                         users = text.split()
             except Exception as e:
-                return await ctx.send(f"Failed to read url: ```py\n{e.__class__.__name__}: {e}\n```")
+                return await ctx.send(
+                    f"Failed to read url: ```py\n{e.__class__.__name__}: {e}\n```"
+                )
 
             await self.execute_massban(ctx, users)
 
         else:
             await ctx.send("Cancelled!")
 
-    @commands.group(name='invites', aliases=['invite'], invoke_without_command=True)
+    @commands.group(name="invites", aliases=["invite"], invoke_without_command=True)
     async def invites(self, ctx, code=None):
         """Returns information on this server's invites, or on a single invite."""
         invites = await ctx.guild.invites()
 
         # if a code is provided, info about that invite
         if code:
-            invite = discord.utils.get(invites, code=code)
+            invite = disnake.utils.get(invites, code=code)
 
             if not invite:
                 return await ctx.send(f"Invite with code {code} not found.")
@@ -524,8 +576,10 @@ class WARNING_EXPERIMENTAL(commands.Cog):
             f"> unused: {inv_unused}\n"
         )
 
-    @invites.command(name='by')
-    async def invites_by(self, ctx, who: Union[discord.Member, discord.User, FetchedUser]):
+    @invites.command(name="by")
+    async def invites_by(
+        self, ctx, who: Union[disnake.Member, disnake.User, FetchedUser]
+    ):
         """Returns a list of invites created by a user."""
         invites = await ctx.guild.invites()
         content = f"__Invites by__: `{who}`\n"
@@ -544,7 +598,7 @@ class WARNING_EXPERIMENTAL(commands.Cog):
     # async def invites_used_since(self, ctx, duration: TimeDelta):
     #     pass
 
-    @invites.command(name='delete')
+    @invites.command(name="delete")
     async def guild_invites_delete(self, ctx, invite_code):
         """Delete an invite."""
         invites = await ctx.guild.invites()
@@ -554,7 +608,9 @@ class WARNING_EXPERIMENTAL(commands.Cog):
                     await invite.delete()
                     return await ctx.send(f"Deleted invite {invite_code}!")
                 except Exception as e:
-                    return await ctx.send(f"Could not delete invite {invite_code}: ```py\n{e.__class__.__name__}: {e}\n```")
+                    return await ctx.send(
+                        f"Could not delete invite {invite_code}: ```py\n{e.__class__.__name__}: {e}\n```"
+                    )
         await ctx.send(f"Could not find invite {invite_code}.")
 
 

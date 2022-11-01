@@ -1,13 +1,12 @@
 import os
 import random
 import traceback
-import discord
 
-from discord.ext import commands, tasks
-
+import disnake
+from disnake.ext import commands, tasks
 
 GUILD = 384811165949231104
-IMG_DIR = './data/server-icons'
+IMG_DIR = "./data/server-icons"
 PLAN_Z = 507429352720433152
 
 
@@ -15,7 +14,7 @@ def find_file(i):
     images = os.listdir(IMG_DIR)
     for img_name in images:
         if img_name.startswith(str(i)):
-            return f'{IMG_DIR}/{img_name}'
+            return f"{IMG_DIR}/{img_name}"
     return
 
 
@@ -24,12 +23,13 @@ def shuffle_server_icons():
     random.shuffle(names)
 
     for img_name in os.listdir(IMG_DIR):
-        ext = img_name.split('.')[-1]
-        os.rename(f'{IMG_DIR}/{img_name}', f'{IMG_DIR}/{names.pop()}.{ext}')
+        ext = img_name.split(".")[-1]
+        os.rename(f"{IMG_DIR}/{img_name}", f"{IMG_DIR}/{names.pop()}.{ext}")
 
 
 class ServerIcon(commands.Cog):
     """Automatic server icon rotation."""
+
     def __init__(self, bot):
         self.bot = bot
         # self.check_if_new_week.start()
@@ -43,12 +43,12 @@ class ServerIcon(commands.Cog):
             guild = self.bot.get_guild(GUILD)
             img = random.choice(os.listdir(IMG_DIR))
             img_path = f"{IMG_DIR}/{img}"
-            with open(img_path, 'rb') as fp:
+            with open(img_path, "rb") as fp:
                 icon = fp.read()
             await guild.edit(icon=icon)
             await self.log(f"Set server icon to `{img_path}`.")
         except Exception as e:
-            error = ''.join(traceback.format_exception(e.__class__, e, e.__traceback__))
+            error = "".join(traceback.format_exception(e.__class__, e, e.__traceback__))
             await self.log(f"Error rotating server icon:```\n{error}\n```")
 
     async def log(self, msg):
