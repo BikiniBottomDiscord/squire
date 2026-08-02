@@ -12,6 +12,7 @@ COGS = [
     "cogs.devtools",
     # "cogs.timeout",
     # 'cogs.logchamp',
+    "technically_automod",
 ]
 
 ADMINS = {

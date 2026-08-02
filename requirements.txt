@@ -7,3 +7,4 @@ psutil
 youtube-dl
 google-cloud-translate
 google-auth
+technically-automod
