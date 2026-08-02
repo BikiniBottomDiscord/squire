@@ -1,5 +1,5 @@
 aiohttp
-disnake~=2.5
+disnake~=2.12
 disnake-jishaku~=2.6
 aiopg
 asyncpg
